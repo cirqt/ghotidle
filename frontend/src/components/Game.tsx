@@ -47,7 +47,7 @@ const Game: React.FC = () => {
     loadNewWord();
   }, [loadNewWord]);
 
-  const handleGuess = async () => {
+  const handleGuess = useCallback(async () => {
     if (!gameState.currentWord || gameState.isGameOver) return;
     
     const guess = currentGuess.toLowerCase().trim();
@@ -105,9 +105,9 @@ const Game: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [gameState, currentGuess, usedLetters]);
 
-  const handleKeyPress = (key: string) => {
+  const handleKeyPress = useCallback((key: string) => {
     if (gameState.isGameOver || loading) return;
 
     if (key === 'ENTER') {
@@ -119,7 +119,8 @@ const Game: React.FC = () => {
         setCurrentGuess((prev) => prev + key.toLowerCase());
       }
     }
-  };
+  }, [gameState.isGameOver, gameState.currentWord, loading, currentGuess.length, handleGuess]);
+
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -134,7 +135,7 @@ const Game: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [handleKeyPress]);
 
   if (!gameState.currentWord && !message.includes('Error')) {
     return <div className="game loading">Loading...</div>;

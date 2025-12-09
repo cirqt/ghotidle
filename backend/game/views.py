@@ -3,20 +3,18 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Word, PhoneticPattern
 from .serializers import WordSerializer
-import random
 
 
 @api_view(['GET'])
 def get_random_word(request):
     """Get a random word for the game."""
-    words = Word.objects.all()
-    if not words.exists():
+    word = Word.objects.order_by('?').first()
+    if not word:
         return Response(
             {'error': 'No words available. Please add words to the database.'},
             status=status.HTTP_404_NOT_FOUND
         )
     
-    word = random.choice(words)
     serializer = WordSerializer(word)
     return Response(serializer.data)
 

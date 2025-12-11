@@ -1,28 +1,17 @@
+// TODO: Define types
+
 export interface Word {
-  id: number;
-  word: string;
-  difficulty: number;
-  patterns: PhoneticPattern[];
+  // TODO: Define Word interface
 }
 
 export interface PhoneticPattern {
-  id: number;
-  pattern: string;
-  explanation: string;
+  // TODO: Define PhoneticPattern interface
 }
 
 export interface GuessResponse {
-  is_correct: boolean;
-  is_valid_pattern: boolean;
-  feedback: ('correct' | 'present' | 'absent')[];
-  message: string;
+  // TODO: Define GuessResponse interface
 }
 
 export interface GameState {
-  currentWord: Word | null;
-  guesses: string[];
-  feedback: ('correct' | 'present' | 'absent')[][];
-  isGameOver: boolean;
-  isWon: boolean;
-  maxGuesses: number;
+  // TODO: Define GameState interface
 }

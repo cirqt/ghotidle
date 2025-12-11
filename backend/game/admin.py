@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+# TODO: Register models
 from .models import Word, PhoneticPattern
 
 

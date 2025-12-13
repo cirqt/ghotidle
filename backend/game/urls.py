@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
 
-# TODO: Define URL patterns
-urlpatterns = []
+urlpatterns = [
+    path('validate/', views.validate_guess, name='validate_guess'),
+]

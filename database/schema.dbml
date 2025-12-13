@@ -1,0 +1,57 @@
+// Ghotidle Database Schema
+// Use https://dbdiagram.io to visualize this schema
+
+Project ghotidle {
+  database_type: 'PostgreSQL'
+  Note: 'Phonetic word puzzle game database'
+}
+
+// Lookup table for phonetic patterns (e.g., "gh" → "f" sound)
+Table phoneticPattern {
+  id integer [primary key, increment]
+  letters varchar(10) [not null]
+  sound varchar(10) [not null]
+  reference varchar(50) [not null]
+  
+  indexes {
+    sound
+    letters
+  }
+}
+
+// Daily puzzle words
+Table word {
+  id integer [primary key, increment]
+  secret varchar(50) [not null]
+  phonetic varchar(50) [not null]
+  date date [unique, not null]
+  
+  indexes {
+    date
+  }
+}
+
+// Many-to-many: Links words to their phonetic breakdown
+Table phoneticComponent {
+  wordId integer [not null]
+  patternId integer [not null]
+  
+  indexes {
+    (wordId, patternId) [pk]
+  }
+}
+
+// User accounts
+Table user {
+  id integer [primary key, increment]
+  username varchar(150) [unique, not null]
+  email varchar(254) [unique, not null]
+  passwordHash varchar(128) [not null]
+  correctGuesses integer [default: 0]
+  wrongGuesses integer [default: 0]
+  streak integer [default: 0]
+}
+
+// Relationships
+Ref: phoneticComponent.wordId > word.id [delete: cascade]
+Ref: phoneticComponent.patternId > phoneticPattern.id [delete: restrict]

@@ -23,7 +23,16 @@ INSERT INTO "phoneticPattern" (letters, sound, reference) VALUES
 ('olo', 'ur', 'colonel'),
 ('ho', 'wuh-y', 'choir'),
 ('o', 'wuh', 'one'),
-('ed', 't', 'hacked');
+('ed', 't', 'hacked'),
+('eye', 'ay', 'eye'),
+('oir', 'way-er', 'choir'),
+('ipt', 'eet', 'receipt'),
+('dnes', 'z', 'wednesday'),
+('gna', 'ni', 'bologna'),
+('ai', 'e', 'said'),
+('oes', 'az', 'does'),
+('do', 'da', 'does'),
+('oo', 'a', 'blood');
 
 -- ============================================
 -- WORDS

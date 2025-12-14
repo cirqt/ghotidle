@@ -3,6 +3,18 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
+@api_view(['GET'])
+def get_word(request):
+    """
+    Simple GET endpoint: returns the target word with phonetic components
+    """
+    return Response({
+        'word': 'fish',
+        'phonetic_spelling': 'gh,o,ti',  # Split by phonetic components
+        'length': 4
+    })
+
+
 @api_view(['POST'])
 def validate_guess(request):
     """

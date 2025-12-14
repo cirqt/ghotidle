@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import Keyboard from './components/Keyboard';
 
@@ -23,11 +23,34 @@ function App() {
   const [gameLost, setGameLost] = useState(false);
   const [error, setError] = useState('');
   const [showInfo, setShowInfo] = useState(false);
+  const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
+  const [targetLength, setTargetLength] = useState(0);
 
-  const PHONETIC_WORD = 'GHOTI'; // The phonetic spelling shown to user
-  const API_URL = 'http://localhost:8000/api/validate/';
+  const API_BASE_URL = 'http://localhost:8000/api';
   const MAX_WORD_LENGTH = 7;
   const MAX_ATTEMPTS = 5;
+
+  // Fetch the daily word on component mount
+  useEffect(() => {
+    const fetchWord = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/word/`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch word');
+        }
+        const data = await response.json();
+        // data.phonetic_spelling is "gh,o,ti" - join to create "GHOTI"
+        const phonetic = data.phonetic_spelling.split(',').join('').toUpperCase();
+        setPhoneticWord(phonetic);
+        setTargetLength(data.length);
+      } catch (err) {
+        setError('Failed to load word. Make sure the backend is running.');
+        console.error('Error fetching word:', err);
+      }
+    };
+
+    fetchWord();
+  }, []);
 
   const handleKeyPress = async (key: string) => {
     if (key === 'Enter') {
@@ -46,7 +69,7 @@ function App() {
     setError('');
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_BASE_URL}/validate/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +171,7 @@ function App() {
       <div className="game-content">
         <div className="phonetic-word">
           <p>todays phonetic speeling:</p>
-          <h2>{PHONETIC_WORD}</h2>
+          <h2>{phoneticWord || 'Loading...'}</h2>
         </div>
 
         {error && <div className="error-message">{error}</div>}

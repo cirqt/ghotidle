@@ -77,11 +77,15 @@ function App() {
         body: JSON.stringify({ guess: currentGuess }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to validate guess');
-      }
-
       const data = await response.json();
+
+      // Check if backend sent an error message
+      if (!response.ok) {
+        // Backend is responding but rejecting the guess (e.g., invalid word)
+        setError(data.error || 'Invalid guess');
+        setIsLoading(false);
+        return;
+      }
       const result: GuessResult = {
         guess: currentGuess,
         feedback: data.feedback,
@@ -99,7 +103,8 @@ function App() {
       
       setCurrentGuess('');
     } catch (err) {
-      setError('Failed to submit guess. Make sure the backend is running.');
+      // This only happens if backend is actually down or network failure
+      setError('Cannot connect to server. Make sure the backend is running.');
       console.error('Error submitting guess:', err);
     } finally {
       setIsLoading(false);

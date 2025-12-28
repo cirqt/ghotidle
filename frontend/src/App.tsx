@@ -22,6 +22,7 @@ function App() {
   const [gameWon, setGameWon] = useState(false);
   const [gameLost, setGameLost] = useState(false);
   const [error, setError] = useState('');
+  const [showToast, setShowToast] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
   const [targetLength, setTargetLength] = useState(0);
@@ -29,6 +30,29 @@ function App() {
   const API_BASE_URL = 'http://localhost:8000/api';
   const MAX_WORD_LENGTH = 7;
   const MAX_ATTEMPTS = 5;
+
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    if (error) {
+      setShowToast(true);
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowToast(false);
+    }
+  }, [error]);
+
+  // Clear error message after slide-out animation completes
+  useEffect(() => {
+    if (!showToast && error) {
+      const timer = setTimeout(() => {
+        setError('');
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast, error]);
 
   // Fetch the daily word on component mount
   useEffect(() => {
@@ -179,8 +203,6 @@ function App() {
           <h2>{phoneticWord || 'Loading...'}</h2>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
-
         <div className="guesses-container">
           {Array.from({ length: MAX_ATTEMPTS }).map((_, index) => {
             const result = guesses[index];
@@ -238,6 +260,13 @@ function App() {
 
         <Keyboard onKeyPress={handleKeyPress} />
       </div>
+
+      {/* Toast notification */}
+      {error && (
+        <div className={`toast ${showToast ? 'show' : ''}`}>
+          {error}
+        </div>
+      )}
     </div>
   );
 }

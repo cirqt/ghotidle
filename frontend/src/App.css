@@ -256,6 +256,39 @@
   max-width: 500px;
   text-align: center;
   font-size: 14px;
+  animation: slideUpFade 0.3s ease-out forwards;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.error-message.dismissing {
+  animation: slideDownFade 0.3s ease-in forwards;
+}
+
+@keyframes slideUpFade {
+  from {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDownFade {
+  from {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
 }
 
 .win-message {

@@ -22,6 +22,7 @@ function App() {
   const [gameWon, setGameWon] = useState(false);
   const [gameLost, setGameLost] = useState(false);
   const [error, setError] = useState('');
+  const [isDismissing, setIsDismissing] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
   const [targetLength, setTargetLength] = useState(0);
@@ -29,6 +30,21 @@ function App() {
   const API_BASE_URL = 'http://localhost:8000/api';
   const MAX_WORD_LENGTH = 7;
   const MAX_ATTEMPTS = 5;
+
+  // Auto-dismiss error after 3 seconds
+  useEffect(() => {
+    if (error) {
+      const dismissTimer = setTimeout(() => {
+        setIsDismissing(true);
+        // Wait for animation to complete before clearing error
+        setTimeout(() => {
+          setError('');
+          setIsDismissing(false);
+        }, 300); // Match animation duration
+      }, 3000);
+      return () => clearTimeout(dismissTimer);
+    }
+  }, [error]);
 
   // Fetch the daily word on component mount
   useEffect(() => {
@@ -174,7 +190,7 @@ function App() {
           <h2>{phoneticWord || 'Loading...'}</h2>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className={`error-message ${isDismissing ? 'dismissing' : ''}`}>{error}</div>}
 
         <div className="guesses-container">
           {Array.from({ length: MAX_ATTEMPTS }).map((_, index) => {

@@ -22,7 +22,7 @@ function App() {
   const [gameWon, setGameWon] = useState(false);
   const [gameLost, setGameLost] = useState(false);
   const [error, setError] = useState('');
-  const [isDismissing, setIsDismissing] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
   const [targetLength, setTargetLength] = useState(0);
@@ -31,20 +31,36 @@ function App() {
   const MAX_WORD_LENGTH = 7;
   const MAX_ATTEMPTS = 5;
 
-  // Auto-dismiss error after 3 seconds
+  // Auto-hide toast after 3 seconds
   useEffect(() => {
     if (error) {
-      const dismissTimer = setTimeout(() => {
-        setIsDismissing(true);
-        // Wait for animation to complete before clearing error
-        setTimeout(() => {
-          setError('');
-          setIsDismissing(false);
-        }, 300); // Match animation duration
+      // Small delay to ensure initial render happens before animation starts
+      const showTimer = setTimeout(() => {
+        setShowToast(true);
+      }, 10); // 10ms delay allows CSS transition to work
+      
+      const hideTimer = setTimeout(() => {
+        setShowToast(false);
       }, 3000);
-      return () => clearTimeout(dismissTimer);
+      
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(hideTimer);
+      };
+    } else {
+      setShowToast(false);
     }
   }, [error]);
+
+  // Clear error message after slide-out animation completes
+  useEffect(() => {
+    if (!showToast && error) {
+      const timer = setTimeout(() => {
+        setError('');
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast, error]);
 
   // Fetch the daily word on component mount
   useEffect(() => {
@@ -194,8 +210,6 @@ function App() {
           <h2>{phoneticWord || 'Loading...'}</h2>
         </div>
 
-        {error && <div className={`error-message ${isDismissing ? 'dismissing' : ''}`}>{error}</div>}
-
         <div className="guesses-container">
           {Array.from({ length: MAX_ATTEMPTS }).map((_, index) => {
             const result = guesses[index];
@@ -253,6 +267,13 @@ function App() {
 
         <Keyboard onKeyPress={handleKeyPress} />
       </div>
+
+      {/* Toast notification */}
+      {error && (
+        <div className={`toast ${showToast ? 'show' : ''}`}>
+          {error}
+        </div>
+      )}
     </div>
   );
 }

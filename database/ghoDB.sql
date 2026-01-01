@@ -28,11 +28,17 @@ CREATE TABLE "user" (
   "streak" integer DEFAULT 0
 );
 
+CREATE TABLE "validWord" (
+  "word" varchar(50) PRIMARY KEY
+);
+
 CREATE INDEX ON "phoneticPattern" ("sound");
 
 CREATE INDEX ON "phoneticPattern" ("letters");
 
 CREATE INDEX ON "word" ("date");
+
+CREATE INDEX ON "validWord" ("word");
 
 ALTER TABLE "phoneticComponent" ADD FOREIGN KEY ("wordId") REFERENCES "word" ("id") ON DELETE CASCADE;
 

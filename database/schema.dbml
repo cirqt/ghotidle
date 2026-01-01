@@ -52,6 +52,17 @@ Table user {
   streak integer [default: 0]
 }
 
+// Dictionary for validating user guesses
+Table validWord {
+  word varchar(50) [primary key]
+  
+  indexes {
+    word
+  }
+  
+  Note: 'Dictionary lookup table (~97k words, 1-7 chars). Used only for validation - no foreign key relationships.'
+}
+
 // Relationships
 Ref: phoneticComponent.wordId > word.id [delete: cascade]
 Ref: phoneticComponent.patternId > phoneticPattern.id [delete: restrict]

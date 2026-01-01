@@ -1,6 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from .models import ValidWord  # Import the ValidWord model
 
 
 @api_view(['GET'])
@@ -24,8 +25,12 @@ def validate_guess(request):
     TARGET_WORD = 'fish'
     guess = request.data.get('guess', '').lower()
     
-    if not guess:
-        return Response({'error': 'No guess provided'}, status=status.HTTP_400_BAD_REQUEST)
+    # Check if word is valid first
+    if not ValidWord.objects.filter(word=guess).exists():
+        return Response({
+            'error': 'Not a valid word',
+            'guess': guess
+        }, status=400)
     
     # Calculate letter feedback
     feedback = []

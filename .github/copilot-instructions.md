@@ -132,7 +132,7 @@ Both servers must run simultaneously for the game to work.
 ## Project-Specific Conventions
 
 ### Planned Database Schema (Not Yet Implemented)
-The `database/schema.dbml` defines a three-table structure for future implementation:
+The `database/schema.dbml` defines the database structure:
 
 1. **`phoneticPattern`** - Letter-to-sound mappings
    - `letters` (varchar): "gh", "o", "ti"
@@ -146,6 +146,29 @@ The `database/schema.dbml` defines a three-table structure for future implementa
 
 3. **`phoneticComponent`** - Many-to-many link between words and patterns
    - `wordId`, `patternId`: Junction table
+
+4. **`user`** - User accounts and statistics
+   - `username`, `email`, `passwordHash`
+   - `correctGuesses`, `wrongGuesses`, `streak`
+
+5. **`validWord`** - Dictionary for guess validation (~97k words)
+   - `word` (varchar, primary key): Valid English words (1-7 chars)
+   - No foreign keys - standalone lookup table
+   - Used to validate user guesses before checking against target word
+
+**Database files**:
+- `database/schema.dbml` - DBML schema definition
+- `database/ghoDB.sql` - PostgreSQL CREATE TABLE statements
+- `database/ghoDBvis.pdf` - Visual ER diagram
+- `backend/data/load_valid_words.py` - Python script to load word list into DB
+- `backend/data/words_filtered.txt` - 97,054 valid English words (1-7 chars)
+- `backend/data/filter_words.py` - Script used to filter the word list
+
+**Loading dictionary into database**:
+```powershell
+# Python script (update DB_CONFIG in the file first)
+python backend/data/load_valid_words.py
+```
 
 **Current state**: Models not implemented - `backend/game/models.py` is empty with TODO comment
 

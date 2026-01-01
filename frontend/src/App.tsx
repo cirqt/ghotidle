@@ -84,6 +84,30 @@ function App() {
     fetchWord();
   }, []);
 
+  // Calculate keyboard letter statuses based on all guesses
+  const getKeyboardLetterStatus = (): Record<string, 'correct' | 'present' | 'absent'> => {
+    const letterStatus: Record<string, 'correct' | 'present' | 'absent'> = {};
+    
+    // Priority: correct > present > absent
+    guesses.forEach((result) => {
+      result.feedback.forEach((feedback) => {
+        const letter = feedback.letter.toLowerCase();
+        const currentStatus = letterStatus[letter];
+        
+        // Only update if new status has higher priority
+        if (feedback.status === 'correct') {
+          letterStatus[letter] = 'correct';
+        } else if (feedback.status === 'present' && currentStatus !== 'correct') {
+          letterStatus[letter] = 'present';
+        } else if (feedback.status === 'absent' && !currentStatus) {
+          letterStatus[letter] = 'absent';
+        }
+      });
+    });
+    
+    return letterStatus;
+  };
+
   const handleKeyPress = async (key: string) => {
     if (key === 'Enter') {
       if (currentGuess.length > 0 && !isLoading && !gameWon && !gameLost) {
@@ -265,7 +289,10 @@ function App() {
           />
         </div>
 
-        <Keyboard onKeyPress={handleKeyPress} />
+        <Keyboard 
+          onKeyPress={handleKeyPress} 
+          letterStatuses={getKeyboardLetterStatus()} 
+        />
       </div>
 
       {/* Toast notification */}

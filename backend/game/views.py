@@ -1,6 +1,9 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
 from .models import ValidWord  # Import the ValidWord model
 
 
@@ -69,3 +72,66 @@ def validate_guess(request):
         'length_match': len(guess) == len(TARGET_WORD)
     })
 
+
+@api_view(['POST'])
+@csrf_exempt
+def register_user(request):
+    """Register a new user"""
+    username = request.data.get('username', '').strip()
+    password = request.data.get('password', '')
+    email = request.data.get('email', '')
+    
+    if not username or not password:
+        return Response({'error': 'Username and password required'}, status=400)
+    
+    if User.objects.filter(username=username).exists():
+        return Response({'error': 'Username already exists'}, status=400)
+    
+    user = User.objects.create_user(username=username, password=password, email=email)
+    login(request, user)
+    
+    return Response({
+        'username': user.username,
+        'email': user.email,
+        'is_admin': user.username == 'cirqt'
+    })
+
+
+@api_view(['POST'])
+@csrf_exempt
+def login_user(request):
+    """Login user"""
+    username = request.data.get('username', '')
+    password = request.data.get('password', '')
+    
+    user = authenticate(request, username=username, password=password)
+    
+    if user is not None:
+        login(request, user)
+        return Response({
+            'username': user.username,
+            'email': user.email,
+            'is_admin': user.username == 'cirqt'
+        })
+    else:
+        return Response({'error': 'Invalid credentials'}, status=401)
+
+
+@api_view(['POST'])
+def logout_user(request):
+    """Logout user"""
+    logout(request)
+    return Response({'message': 'Logged out successfully'})
+
+
+@api_view(['GET'])
+def get_current_user(request):
+    """Get currently logged in user"""
+    if request.user.is_authenticated:
+        return Response({
+            'username': request.user.username,
+            'email': request.user.email,
+            'is_admin': request.user.username == 'cirqt'
+        })
+    else:
+        return Response({'error': 'Not authenticated'}, status=401)

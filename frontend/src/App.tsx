@@ -283,6 +283,11 @@ function App() {
             className="search-input"
             value={currentGuess}
             onChange={handleInputChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleKeyPress('Enter');
+              }
+            }}
             placeholder={gameWon ? "You won!" : gameLost ? "Game over!" : "enter your guess"}
             autoFocus
             disabled={isLoading || gameWon || gameLost}

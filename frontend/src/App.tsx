@@ -15,6 +15,66 @@ interface GuessResult {
   length_match: boolean;
 }
 
+interface AuthFormProps {
+  mode: 'login' | 'register';
+  onSubmit: (username: string, password: string, email?: string) => void;
+}
+
+// AuthForm component for login/register
+function AuthForm({ mode, onSubmit }: AuthFormProps) {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(username, password, email);
+  };
+
+  return (
+    <form className="auth-form" onSubmit={handleSubmit}>
+      <div className="form-group">
+        <label htmlFor="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+      </div>
+
+      {mode === 'register' && (
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+      )}
+
+      <div className="form-group">
+        <label htmlFor="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+
+      <button type="submit" className="submit-button">
+        {mode === 'login' ? 'Login' : 'Register'}
+      </button>
+    </form>
+  );
+}
+
 function App() {
   const [currentGuess, setCurrentGuess] = useState('');
   const [guesses, setGuesses] = useState<GuessResult[]>([]);
@@ -24,12 +84,34 @@ function App() {
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [user, setUser] = useState<{username: string, email: string, is_admin: boolean} | null>(null);
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
   const [targetLength, setTargetLength] = useState(0);
 
   const API_BASE_URL = 'http://localhost:8000/api';
   const MAX_WORD_LENGTH = 7;
   const MAX_ATTEMPTS = 5;
+
+  // Check if user is already logged in on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me/`, {
+          credentials: 'include', // Important: include session cookie
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        }
+      } catch (err) {
+        // User not logged in, that's ok
+        console.log('Not logged in');
+      }
+    };
+    checkAuth();
+  }, []);
 
   // Auto-hide toast after 3 seconds
   useEffect(() => {
@@ -173,6 +255,70 @@ function App() {
     }
   };
 
+  const handleLogin = async (username: string, password: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important: include session cookie
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setShowAuth(false);
+        setError('');
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Login failed');
+      }
+    } catch (err) {
+      setError('Login failed');
+      console.error('Login error:', err);
+    }
+  };
+
+  const handleRegister = async (username: string, email: string, password: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important: include session cookie
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setShowAuth(false);
+        setError('');
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Registration failed');
+      }
+    } catch (err) {
+      setError('Registration failed');
+      console.error('Registration error:', err);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout/`, {
+        method: 'POST',
+        credentials: 'include', // Important: include session cookie
+      });
+      setUser(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
+
   return (
     <div className="App">
       <header className="menu-bar">
@@ -183,12 +329,24 @@ function App() {
           </button>
         </div>
         <div className="menu-right">
-          <button className="user-icon-button" aria-label="Sign in / Sign up">
-            <svg className="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="8" r="4"/>
-              <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
-            </svg>
-          </button>
+          {user?.is_admin && (
+            <button className="admin-button" aria-label="Admin Panel">
+              ⚙️ Admin
+            </button>
+          )}
+          {user ? (
+            <div className="user-menu">
+              <span className="username">{user.username}</span>
+              <button className="logout-button" onClick={handleLogout}>Logout</button>
+            </div>
+          ) : (
+            <button className="user-icon-button" onClick={() => setShowAuth(true)} aria-label="Sign in / Sign up">
+              <svg className="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+              </svg>
+            </button>
+          )}
         </div>
       </header>
 
@@ -223,6 +381,46 @@ function App() {
               </ul>
               
               <p>You have unlimited guesses. Good luck!</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Auth Modal */}
+      {showAuth && (
+        <div className="modal-overlay" onClick={() => setShowAuth(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{authMode === 'login' ? 'Login' : 'Register'}</h2>
+              <button className="modal-close" onClick={() => setShowAuth(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="auth-tabs">
+                <button 
+                  className={`auth-tab ${authMode === 'login' ? 'active' : ''}`}
+                  onClick={() => setAuthMode('login')}
+                >
+                  Login
+                </button>
+                <button 
+                  className={`auth-tab ${authMode === 'register' ? 'active' : ''}`}
+                  onClick={() => setAuthMode('register')}
+                >
+                  Register
+                </button>
+              </div>
+
+              {authMode === 'login' ? (
+                <AuthForm 
+                  mode="login" 
+                  onSubmit={(username, password) => handleLogin(username, password)}
+                />
+              ) : (
+                <AuthForm 
+                  mode="register" 
+                  onSubmit={(username, password, email) => handleRegister(username, email || '', password)}
+                />
+              )}
             </div>
           </div>
         </div>

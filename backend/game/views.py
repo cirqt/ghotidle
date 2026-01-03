@@ -118,9 +118,13 @@ def login_user(request):
 
 
 @api_view(['POST'])
+@csrf_exempt
 def logout_user(request):
     """Logout user"""
-    logout(request)
+    if request.user.is_authenticated:
+        logout(request)
+        # Explicitly flush the session
+        request.session.flush()
     return Response({'message': 'Logged out successfully'})
 
 

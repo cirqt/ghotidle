@@ -247,3 +247,171 @@ Based on current prototype state, these are the key missing pieces:
    - Rapid prototyping approach
    - Easier to understand all logic in one place during early development
    - Should be refactored as features grow
+
+## Setting Up on a New Workstation
+
+### Prerequisites
+1. **Git** - Clone the repository
+2. **Python 3.12+** - Backend runtime
+3. **Node.js 20+** - Frontend runtime
+4. **PostgreSQL 16+** - Database server
+
+### Initial Setup Steps
+
+**1. Clone Repository**
+```powershell
+git clone https://github.com/cirqt/ghotidle.git
+cd ghotidle
+```
+
+**2. Database Setup**
+Create PostgreSQL database (using psql or pgAdmin):
+```sql
+CREATE DATABASE ghodb;
+```
+
+Update credentials in `backend/ghotidle_backend/settings.py` if needed:
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ghodb',
+        'USER': 'postgres',
+        'PASSWORD': 'admin',  # Change to match your PostgreSQL password
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+```
+
+**3. Backend Setup**
+```powershell
+cd backend
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# Create database tables (16 tables: auth, sessions, game models)
+python manage.py migrate
+
+# Create admin user (optional, for Django admin panel)
+python manage.py createsuperuser
+# Username: admin (or anything)
+# Email: your@email.com
+# Password: your_password
+
+# Load valid words dictionary (97,054 words for guess validation)
+python data/load_valid_words.py
+```
+
+**4. Frontend Setup**
+```powershell
+cd ../frontend
+npm install
+```
+
+**5. Start Servers**
+```powershell
+# Terminal 1 - Backend
+cd backend
+.\venv\Scripts\Activate.ps1
+python manage.py runserver  # http://127.0.0.1:8000
+
+# Terminal 2 - Frontend
+cd frontend
+npm start  # http://localhost:3000
+```
+
+### Database Tables Overview
+
+After running `python manage.py migrate`, PostgreSQL will have **16 tables**:
+
+**Authentication Tables (6) - Django built-in:**
+- `auth_user` - User accounts (username, email, hashed password)
+- `auth_group`, `auth_permission` - Permission system
+- `auth_user_groups`, `auth_user_user_permissions` - Many-to-many links
+- `auth_group_permissions` - Group permissions
+
+**Game Tables (6) - Custom models:**
+- `validWord` - 97,054 valid English words (1-7 chars) for guess validation
+- `word` - Daily puzzle words (secret, phonetic spelling, date)
+- `phoneticPattern` - Phonetic mappings (e.g., "gh"→"f" from "enough")
+- `phoneticComponent` - Junction table linking words to patterns
+- `game_word` - Django-managed version of word table
+- `game_phoneticpattern` - Django-managed version of phoneticPattern table
+
+**Django Core Tables (3) - Required:**
+- `django_session` - Active user sessions (for login persistence)
+- `django_migrations` - Migration history tracking
+- `django_content_type` - Django's internal content type system
+
+**Admin Tables (1) - Optional:**
+- `django_admin_log` - Audit log for Django admin panel actions
+
+### Transferring Data Between Workstations
+
+**Option 1: Full Database Export/Import (Recommended)**
+```powershell
+# On original workstation - Export entire database
+pg_dump -U postgres -d ghodb > ghodb_backup.sql
+
+# On new workstation - Import after creating empty database
+createdb -U postgres ghodb
+psql -U postgres -d ghodb < ghodb_backup.sql
+```
+
+**Option 2: Selective Data Export (Django Fixtures)**
+```powershell
+# Export specific data as JSON
+python manage.py dumpdata auth.User --indent 2 > fixtures/users.json
+python manage.py dumpdata game.Word game.PhoneticPattern --indent 2 > fixtures/game_data.json
+
+# Import on new workstation (after running migrations)
+python manage.py loaddata fixtures/users.json
+python manage.py loaddata fixtures/game_data.json
+```
+
+**Option 3: Fresh Start (Development)**
+- Run migrations to create empty tables
+- Recreate superuser with `createsuperuser`
+- Reload valid words with `python data/load_valid_words.py`
+- Add new puzzle words through admin interface
+
+### Important Notes
+
+1. **Password Security**: Django uses PBKDF2-SHA256 hashing. Passwords are salted and cannot be reverse-engineered from the database.
+
+2. **Sessions Don't Transfer**: Login sessions are tied to the server's SECRET_KEY. Users must log in again on a new workstation unless you:
+   - Keep the same SECRET_KEY in settings.py
+   - Import the django_session table data
+
+3. **Valid Words Reload**: The `validWord` table (97k words) should be reloaded on new workstations using `backend/data/load_valid_words.py`.
+
+4. **PostgreSQL Credentials**: Update `backend/ghotidle_backend/settings.py` to match your local PostgreSQL username/password.
+
+5. **CORS Settings**: Already configured for localhost:3000 and 127.0.0.1:3000. Update `CORS_ALLOWED_ORIGINS` in settings.py for production domains.
+
+6. **No SQLite Used**: Project uses PostgreSQL exclusively. The `db.sqlite3` file in backend (if present) is unused and can be ignored/deleted.
+
+### Troubleshooting New Workstation Setup
+
+**"relation does not exist" errors:**
+```powershell
+# Run migrations
+python manage.py migrate
+```
+
+**CSRF/CORS errors:**
+- Backend uses custom `CsrfExemptSessionAuthentication` class
+- CSRF middleware is disabled for REST API
+- Ensure `CORS_ALLOW_CREDENTIALS = True` in settings.py
+
+**Cannot connect to PostgreSQL:**
+- Verify PostgreSQL service is running
+- Check credentials in settings.py match your PostgreSQL setup
+- Ensure database `ghodb` exists: `psql -U postgres -l`
+
+**Valid words not loading:**
+- Ensure `backend/data/words_filtered.txt` exists (97,054 lines)
+- Run `python data/load_valid_words.py` from backend directory
+- Check console for progress output

@@ -26,9 +26,20 @@ function AuthForm({ mode, onSubmit }: AuthFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // Reset form when mode changes
+  useEffect(() => {
+    setUsername('');
+    setEmail('');
+    setPassword('');
+  }, [mode]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(username, password, email);
+    // Clear form after submission
+    setUsername('');
+    setEmail('');
+    setPassword('');
   };
 
   return (
@@ -257,6 +268,7 @@ function App() {
 
   const handleLogin = async (username: string, password: string) => {
     try {
+      console.log('Attempting login for:', username);
       const response = await fetch(`${API_BASE_URL}/auth/login/`, {
         method: 'POST',
         headers: {
@@ -266,18 +278,21 @@ function App() {
         body: JSON.stringify({ username, password }),
       });
 
+      console.log('Login response status:', response.status);
+      
       if (response.ok) {
         const userData = await response.json();
+        console.log('Login successful:', userData);
         setUser(userData);
-        setShowAuth(false);
-        setError('');
+        closeAuthModal();
       } else {
         const data = await response.json();
+        console.log('Login failed:', data);
         setError(data.error || 'Login failed');
       }
     } catch (err) {
-      setError('Login failed');
       console.error('Login error:', err);
+      setError('Login failed');
     }
   };
 
@@ -295,8 +310,7 @@ function App() {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
-        setShowAuth(false);
-        setError('');
+        closeAuthModal();
       } else {
         const data = await response.json();
         setError(data.error || 'Registration failed');
@@ -309,14 +323,23 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout/`, {
+      console.log('Attempting logout...');
+      const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
         method: 'POST',
         credentials: 'include', // Important: include session cookie
       });
+      console.log('Logout response status:', response.status);
       setUser(null);
+      console.log('User state cleared');
     } catch (err) {
       console.error('Logout error:', err);
     }
+  };
+
+  const closeAuthModal = () => {
+    setShowAuth(false);
+    setAuthMode('login');
+    setError(''); // Clear any error messages
   };
 
   return (
@@ -388,11 +411,11 @@ function App() {
 
       {/* Auth Modal */}
       {showAuth && (
-        <div className="modal-overlay" onClick={() => setShowAuth(false)}>
+        <div className="modal-overlay" onClick={closeAuthModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{authMode === 'login' ? 'Login' : 'Register'}</h2>
-              <button className="modal-close" onClick={() => setShowAuth(false)}>×</button>
+              <button className="modal-close" onClick={closeAuthModal}>×</button>
             </div>
             <div className="modal-body">
               <div className="auth-tabs">
@@ -504,7 +527,7 @@ function App() {
           {error}
         </div>
       )}
-    </div>
+      </div>
   );
 }
 

@@ -93,7 +93,7 @@ def register_user(request):
     return Response({
         'username': user.username,
         'email': user.email,
-        'is_admin': user.username == 'cirqt'
+        'is_superuser': user.is_superuser
     })
 
 
@@ -111,7 +111,7 @@ def login_user(request):
         return Response({
             'username': user.username,
             'email': user.email,
-            'is_admin': user.username == 'cirqt'
+            'is_superuser': user.is_superuser
         })
     else:
         return Response({'error': 'Invalid credentials'}, status=401)
@@ -135,7 +135,165 @@ def get_current_user(request):
         return Response({
             'username': request.user.username,
             'email': request.user.email,
-            'is_admin': request.user.username == 'cirqt'
+            'is_superuser': request.user.is_superuser
         })
     else:
         return Response({'error': 'Not authenticated'}, status=401)
+
+
+@api_view(['POST'])
+@csrf_exempt
+def suggest_phonetic_patterns(request):
+    """Suggest phonetic patterns based on sound breakdown"""
+    from .models import PhoneticPattern
+    
+    # Check if user is authenticated and is superuser
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return Response({'error': 'Permission denied. Admin access required.'}, status=403)
+    
+    sounds = request.data.get('sounds', '').lower().strip()
+    
+    if not sounds:
+        return Response({'suggestions': []})
+    
+    # Split sounds by hyphen (e.g., "f-i-sh" -> ["f", "i", "sh"])
+    sound_list = [s.strip() for s in sounds.split('-') if s.strip()]
+    
+    suggestions = []
+    for sound in sound_list:
+        # Find all patterns that produce this sound
+        patterns = PhoneticPattern.objects.filter(sound=sound)
+        
+        pattern_data = []
+        for pattern in patterns:
+            pattern_data.append({
+                'id': pattern.id,
+                'letters': pattern.letters,
+                'sound': pattern.sound,
+                'reference': pattern.reference
+            })
+        
+        suggestions.append({
+            'sound': sound,
+            'patterns': pattern_data
+        })
+    
+    return Response({'suggestions': suggestions})
+
+
+@api_view(['POST'])
+@csrf_exempt
+def create_phonetic_pattern(request):
+    """Create a new phonetic pattern - admin only"""
+    from .models import PhoneticPattern
+    
+    # Check if user is authenticated and is superuser
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return Response({'error': 'Permission denied. Admin access required.'}, status=403)
+    
+    letters = request.data.get('letters', '').lower().strip()
+    sound = request.data.get('sound', '').lower().strip()
+    reference = request.data.get('reference', '').lower().strip()
+    
+    # Validation
+    if not letters or not sound or not reference:
+        return Response({'error': 'All fields are required'}, status=400)
+    
+    if len(letters) > 10 or len(sound) > 10:
+        return Response({'error': 'Letters and sound must be 10 characters or less'}, status=400)
+    
+    if len(reference) > 50:
+        return Response({'error': 'Reference word must be 50 characters or less'}, status=400)
+    
+    # Check if this exact pattern already exists
+    if PhoneticPattern.objects.filter(letters=letters, sound=sound, reference=reference).exists():
+        return Response({'error': f'This pattern already exists'}, status=400)
+    
+    try:
+        # Create the pattern
+        pattern = PhoneticPattern.objects.create(
+            letters=letters,
+            sound=sound,
+            reference=reference
+        )
+        
+        return Response({
+            'message': 'Pattern created successfully',
+            'pattern': {
+                'id': pattern.id,
+                'letters': pattern.letters,
+                'sound': pattern.sound,
+                'reference': pattern.reference
+            }
+        }, status=201)
+    
+    except Exception as e:
+        return Response({
+            'error': f'Failed to create pattern: {str(e)}'
+        }, status=500)
+
+
+@api_view(['POST'])
+@csrf_exempt
+def create_word(request):
+    """Create a new puzzle word - admin only"""
+    from .models import Word, PhoneticComponent
+    from datetime import date
+    
+    # Check if user is authenticated and is superuser
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return Response({'error': 'Permission denied. Admin access required.'}, status=403)
+    
+    secret = request.data.get('secret', '').lower().strip()
+    phonetic = request.data.get('phonetic', '').lower().strip()
+    sounds = request.data.get('sounds', '').lower().strip()
+    pattern_ids = request.data.get('pattern_ids', [])
+    
+    # Validation
+    if not secret or not phonetic:
+        return Response({'error': 'Both secret and phonetic spelling are required'}, status=400)
+    
+    if len(secret) > 50 or len(phonetic) > 50:
+        return Response({'error': 'Words must be 50 characters or less'}, status=400)
+    
+    # Check if secret is a valid word
+    if not ValidWord.objects.filter(word=secret).exists():
+        return Response({
+            'error': f'"{secret}" is not a valid word in our dictionary'
+        }, status=400)
+    
+    # Check if word already exists
+    if Word.objects.filter(secret=secret).exists():
+        return Response({'error': f'Word "{secret}" already exists'}, status=400)
+    
+    try:
+        # Create the word with today's date (for now)
+        word = Word.objects.create(
+            secret=secret,
+            phonetic=phonetic,
+            date=date.today()
+        )
+        
+        # Associate selected phonetic patterns with the word
+        if pattern_ids:
+            for pattern_id in pattern_ids:
+                PhoneticComponent.objects.create(
+                    wordId=word,
+                    patternId_id=pattern_id
+                )
+        
+        return Response({
+            'message': 'Word created successfully',
+            'word': {
+                'secret': word.secret,
+                'phonetic': word.phonetic,
+                'date': word.date.isoformat(),
+                'sounds': sounds,
+                'pattern_count': len(pattern_ids)
+            }
+        }, status=201)
+    
+    except Exception as e:
+        return Response({
+            'error': f'Failed to create word: {str(e)}'
+        }, status=500)

@@ -96,10 +96,27 @@ function App() {
   const [showToast, setShowToast] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-  const [user, setUser] = useState<{username: string, email: string, is_admin: boolean} | null>(null);
+  const [user, setUser] = useState<{username: string, email: string, is_superuser: boolean} | null>(null);
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
   const [targetLength, setTargetLength] = useState(0);
+  
+  // Admin form state
+  const [adminMode, setAdminMode] = useState<'word' | 'pattern'>('word');
+  const [adminSecret, setAdminSecret] = useState('');
+  const [adminPhonetic, setAdminPhonetic] = useState('');
+  const [adminSounds, setAdminSounds] = useState(''); // e.g., "f-i-sh"
+  const [suggestedPatterns, setSuggestedPatterns] = useState<any[]>([]);
+  const [selectedPatterns, setSelectedPatterns] = useState<number[]>([]);
+  const [isLoadingPatterns, setIsLoadingPatterns] = useState(false);
+  const [adminError, setAdminError] = useState('');
+  const [adminSuccess, setAdminSuccess] = useState('');
+  
+  // Pattern form state
+  const [patternLetters, setPatternLetters] = useState('');
+  const [patternSound, setPatternSound] = useState('');
+  const [patternReference, setPatternReference] = useState('');
 
   const API_BASE_URL = 'http://localhost:8000/api';
   const MAX_WORD_LENGTH = 7;
@@ -342,6 +359,143 @@ function App() {
     setError(''); // Clear any error messages
   };
 
+  const handleSoundsChange = async (sounds: string) => {
+    setAdminSounds(sounds);
+    
+    // Clear suggestions if input is empty
+    if (!sounds.trim()) {
+      setSuggestedPatterns([]);
+      return;
+    }
+
+    // Fetch pattern suggestions when user types sounds
+    setIsLoadingPatterns(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/phonetic-patterns/suggest/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          sounds: sounds.toLowerCase().trim(),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSuggestedPatterns(data.suggestions || []);
+      }
+    } catch (err) {
+      console.error('Error fetching pattern suggestions:', err);
+    } finally {
+      setIsLoadingPatterns(false);
+    }
+  };
+
+  const handleAdminSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminError('');
+    setAdminSuccess('');
+
+    // Basic validation
+    if (!adminSecret.trim() || !adminPhonetic.trim()) {
+      setAdminError('Both fields are required');
+      return;
+    }
+
+    if (adminSecret.length > 50 || adminPhonetic.length > 50) {
+      setAdminError('Words must be 50 characters or less');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/words/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          secret: adminSecret.toLowerCase().trim(),
+          phonetic: adminPhonetic.toLowerCase().trim(),
+          sounds: adminSounds.toLowerCase().trim(),
+          pattern_ids: selectedPatterns,
+        }),
+      });
+
+      if (response.ok) {
+        setAdminSuccess('Word added successfully!');
+        setAdminSecret('');
+        setAdminPhonetic('');
+        setAdminSounds('');
+        setSuggestedPatterns([]);
+        setSelectedPatterns([]);
+        // Close modal after 1.5 seconds
+        setTimeout(() => {
+          setShowAdmin(false);
+          setAdminSuccess('');
+        }, 1500);
+      } else {
+        const data = await response.json();
+        setAdminError(data.error || 'Failed to add word');
+      }
+    } catch (err) {
+      setAdminError('Network error. Please try again.');
+      console.error('Admin submit error:', err);
+    }
+  };
+
+  const handlePatternSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminError('');
+    setAdminSuccess('');
+
+    // Basic validation
+    if (!patternLetters.trim() || !patternSound.trim() || !patternReference.trim()) {
+      setAdminError('All fields are required');
+      return;
+    }
+
+    if (patternLetters.length > 10 || patternSound.length > 10 || patternReference.length > 50) {
+      setAdminError('Input too long. Check field limits.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/phonetic-patterns/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          letters: patternLetters.toLowerCase().trim(),
+          sound: patternSound.toLowerCase().trim(),
+          reference: patternReference.toLowerCase().trim(),
+        }),
+      });
+
+      if (response.ok) {
+        setAdminSuccess('Pattern added successfully!');
+        setPatternLetters('');
+        setPatternSound('');
+        setPatternReference('');
+        // Close modal after 1.5 seconds
+        setTimeout(() => {
+          setShowAdmin(false);
+          setAdminSuccess('');
+        }, 1500);
+      } else {
+        const data = await response.json();
+        setAdminError(data.error || 'Failed to add pattern');
+      }
+    } catch (err) {
+      setAdminError('Network error. Please try again.');
+      console.error('Pattern submit error:', err);
+    }
+  };
+
   return (
     <div className="App">
       <header className="menu-bar">
@@ -352,8 +506,8 @@ function App() {
           </button>
         </div>
         <div className="menu-right">
-          {user?.is_admin && (
-            <button className="admin-button" aria-label="Admin Panel">
+          {user?.is_superuser && (
+            <button className="admin-button" onClick={() => setShowAdmin(true)} aria-label="Admin Panel">
               ⚙️ Admin
             </button>
           )}
@@ -443,6 +597,189 @@ function App() {
                   mode="register" 
                   onSubmit={(username, password, email) => handleRegister(username, email || '', password)}
                 />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Modal */}
+      {showAdmin && (
+        <div className="modal-overlay" onClick={() => setShowAdmin(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Admin Panel</h2>
+              <button className="modal-close" onClick={() => setShowAdmin(false)}>×</button>
+            </div>
+            
+            {/* Admin Tabs */}
+            <div className="admin-tabs">
+              <button 
+                className={`admin-tab ${adminMode === 'word' ? 'active' : ''}`}
+                onClick={() => {
+                  setAdminMode('word');
+                  setAdminError('');
+                  setAdminSuccess('');
+                }}
+              >
+                Add Word
+              </button>
+              <button 
+                className={`admin-tab ${adminMode === 'pattern' ? 'active' : ''}`}
+                onClick={() => {
+                  setAdminMode('pattern');
+                  setAdminError('');
+                  setAdminSuccess('');
+                }}
+              >
+                Add Pattern
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {adminError && <div className="error-message">{adminError}</div>}
+              {adminSuccess && <div className="success-message">{adminSuccess}</div>}
+
+              {/* Word Form */}
+              {adminMode === 'word' && (
+                <form className="admin-form" onSubmit={handleAdminSubmit}>
+                
+                <div className="form-group">
+                  <label htmlFor="secret">Standard Spelling</label>
+                  <input
+                    type="text"
+                    id="secret"
+                    placeholder="e.g., fish"
+                    maxLength={50}
+                    value={adminSecret}
+                    onChange={(e) => setAdminSecret(e.target.value)}
+                  />
+                  <span className="form-hint">The correct spelling players need to guess</span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="phonetic">Phonetic Spelling</label>
+                  <input
+                    type="text"
+                    id="phonetic"
+                    placeholder="e.g., ghoti"
+                    maxLength={50}
+                    value={adminPhonetic}
+                    onChange={(e) => setAdminPhonetic(e.target.value)}
+                  />
+                  <span className="form-hint">The unconventional phonetic spelling to display</span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="sounds">How It Sounds (with hyphens)</label>
+                  <input
+                    type="text"
+                    id="sounds"
+                    placeholder="e.g., f-i-sh"
+                    maxLength={100}
+                    value={adminSounds}
+                    onChange={(e) => handleSoundsChange(e.target.value)}
+                  />
+                  <span className="form-hint">Separate each sound with a hyphen (e.g., "f-i-sh", "n-ay-sh-un")</span>
+                </div>
+
+                {/* Pattern Suggestions */}
+                {isLoadingPatterns && (
+                  <div className="pattern-loading">Finding matching patterns...</div>
+                )}
+                
+                {suggestedPatterns.length > 0 && (
+                  <div className="pattern-suggestions">
+                    <h3>Suggested Phonetic Patterns:</h3>
+                    {suggestedPatterns.map((sound, soundIndex) => (
+                      <div key={soundIndex} className="sound-group">
+                        <h4>Sound: "{sound.sound}"</h4>
+                        {sound.patterns.length > 0 ? (
+                          <div className="pattern-options">
+                            {sound.patterns.map((pattern: any) => (
+                              <label key={pattern.id} className="pattern-option">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedPatterns.includes(pattern.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedPatterns([...selectedPatterns, pattern.id]);
+                                    } else {
+                                      setSelectedPatterns(selectedPatterns.filter(id => id !== pattern.id));
+                                    }
+                                  }}
+                                />
+                                <span className="pattern-letters">{pattern.letters}</span>
+                                <span className="pattern-arrow">→</span>
+                                <span className="pattern-sound">{pattern.sound}</span>
+                                <span className="pattern-reference">(from "{pattern.reference}")</span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="no-patterns">No patterns found for "{sound.sound}". You may need to add this pattern first.</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button type="submit" className="submit-button">
+                  Add Word
+                </button>
+              </form>
+              )}
+
+              {/* Pattern Form */}
+              {adminMode === 'pattern' && (
+                <form className="admin-form" onSubmit={handlePatternSubmit}>
+                  <div className="form-group">
+                    <label htmlFor="pattern-letters">Letter Combination</label>
+                    <input
+                      type="text"
+                      id="pattern-letters"
+                      placeholder="e.g., ti, gh, ph"
+                      maxLength={10}
+                      value={patternLetters}
+                      onChange={(e) => setPatternLetters(e.target.value)}
+                    />
+                    <span className="form-hint">The letters that make the sound (max 10 chars)</span>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="pattern-sound">Sound It Makes</label>
+                    <input
+                      type="text"
+                      id="pattern-sound"
+                      placeholder="e.g., sh, f, i"
+                      maxLength={10}
+                      value={patternSound}
+                      onChange={(e) => setPatternSound(e.target.value)}
+                    />
+                    <span className="form-hint">The phonetic sound produced (max 10 chars)</span>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="pattern-reference">Reference Word</label>
+                    <input
+                      type="text"
+                      id="pattern-reference"
+                      placeholder="e.g., nation, enough, women"
+                      maxLength={50}
+                      value={patternReference}
+                      onChange={(e) => setPatternReference(e.target.value)}
+                    />
+                    <span className="form-hint">An example word where this pattern appears</span>
+                  </div>
+
+                  <div className="pattern-example">
+                    <strong>Example:</strong> In "nation", the letters "ti" make the sound "sh"
+                  </div>
+
+                  <button type="submit" className="submit-button">
+                    Add Pattern
+                  </button>
+                </form>
               )}
             </div>
           </div>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ValidWord, Word, PhoneticPattern, PhoneticComponent
+from .models import ValidWord, Word, PhoneticPattern, PhoneticComponent, UserStats
 
 @admin.register(ValidWord)
 class ValidWordAdmin(admin.ModelAdmin):
@@ -21,6 +21,22 @@ class WordAdmin(admin.ModelAdmin):
     list_filter = ['date']
     date_hierarchy = 'date'
     ordering = ['-date']
+
+@admin.register(UserStats)
+class UserStatsAdmin(admin.ModelAdmin):
+    list_display = ['user', 'correctGuesses', 'wrongGuesses', 'streak', 'get_total_games', 'get_win_rate']
+    search_fields = ['user__username']
+    list_filter = ['streak']
+    ordering = ['-streak', '-correctGuesses']
+    readonly_fields = ['get_total_games', 'get_win_rate']
+    
+    def get_total_games(self, obj):
+        return obj.total_games
+    get_total_games.short_description = 'Total Games'
+    
+    def get_win_rate(self, obj):
+        return f"{obj.win_rate:.1f}%"
+    get_win_rate.short_description = 'Win Rate'
 
 # Note: PhoneticComponent is the through table for ManyToMany relationship
 # It's automatically managed through the Word admin interface

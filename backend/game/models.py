@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class ValidWord(models.Model):
     word = models.CharField(max_length=50, primary_key=True)
@@ -68,3 +69,31 @@ class PhoneticComponent(models.Model):
     
     def __str__(self):
         return f"{self.word.phonetic} uses {self.pattern.letters}"
+
+
+class UserStats(models.Model):
+    """User statistics for leaderboard"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, db_column='userId', primary_key=True)
+    correctGuesses = models.IntegerField(default=0, db_column='correctGuesses')
+    wrongGuesses = models.IntegerField(default=0, db_column='wrongGuesses')
+    streak = models.IntegerField(default=0, db_column='streak')
+    
+    class Meta:
+        db_table = 'userStats'  # camelCase to match your convention
+        verbose_name = 'User Statistics'
+        verbose_name_plural = 'User Statistics'
+    
+    def __str__(self):
+        return f"{self.user.username}: {self.correctGuesses} correct, streak {self.streak}"
+    
+    @property
+    def total_games(self):
+        """Total games played"""
+        return self.correctGuesses + self.wrongGuesses
+    
+    @property
+    def win_rate(self):
+        """Win rate as percentage"""
+        if self.total_games == 0:
+            return 0
+        return (self.correctGuesses / self.total_games) * 100

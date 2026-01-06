@@ -101,6 +101,7 @@ function App() {
   const [user, setUser] = useState<{username: string, email: string, is_superuser: boolean} | null>(null);
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
   const [targetLength, setTargetLength] = useState(0);
+  const [targetWord, setTargetWord] = useState(''); // The actual answer
   
   // Admin form state
   const [adminMode, setAdminMode] = useState<'word' | 'pattern'>('word');
@@ -185,6 +186,7 @@ function App() {
         const phonetic = data.phonetic_spelling.split(',').join('').toUpperCase();
         setPhoneticWord(phonetic);
         setTargetLength(data.length);
+        setTargetWord(data.word); // Store the answer for reveal
       } catch (err) {
         setError('Failed to load word. Make sure the backend is running.');
         console.error('Error fetching word:', err);
@@ -557,7 +559,26 @@ function App() {
                 <li><span className="color-demo absent">Gray</span> = Letter not in word</li>
               </ul>
               
-              <p>You have unlimited guesses. Good luck!</p>
+              <p>You have <strong>5 attempts</strong> to guess the word. Good luck!</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Game Lost Modal */}
+      {gameLost && (
+        <div className="modal-overlay" onClick={() => setGameLost(false)}>
+          <div className="modal-content game-over-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Better luck next time!</h2>
+              <button className="modal-close" onClick={() => setGameLost(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p className="game-over-label">The word was:</p>
+              <div className="revealed-word">{targetWord.toUpperCase()}</div>
+              <p className="phonetic-explanation">
+                Phonetically: <strong>{phoneticWord}</strong>
+              </p>
             </div>
           </div>
         </div>

@@ -162,3 +162,19 @@ REST_FRAMEWORK = {
 # Disable CSRF for API endpoints (we're using session auth with CORS)
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
+
+# Email Configuration
+# For development: Console backend (prints emails to terminal)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# For production with Gmail SMTP (uncomment and configure):
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'  # Your Gmail address
+# EMAIL_HOST_PASSWORD = 'your-app-password'  # Gmail App Password (not regular password)
+# DEFAULT_FROM_EMAIL = 'Ghotidle <your-email@gmail.com>'
+
+# Password Reset Settings
+PASSWORD_RESET_TIMEOUT = 3600  # Token valid for 1 hour (in seconds)

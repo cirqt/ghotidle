@@ -415,3 +415,223 @@ python manage.py migrate
 - Ensure `backend/data/words_filtered.txt` exists (97,054 lines)
 - Run `python data/load_valid_words.py` from backend directory
 - Check console for progress output
+
+---
+
+## Forgot Password Feature
+
+**Status:** ✅ Fully Implemented (January 23, 2026)
+
+### Overview
+Users can reset their password via email using Django's token-based password reset system. Two-step flow: Request Reset → Confirm Reset.
+
+### Email Configuration (Development)
+Located in `backend/ghotidle_backend/settings.py`:
+```python
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Current
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour token expiry
+```
+
+**IMPORTANT:** In development, emails **print to the Django terminal** (where `python manage.py runserver` runs), NOT to actual email inboxes. This is intentional for easy testing without SMTP configuration.
+
+**For Production:** Uncomment Gmail SMTP settings in settings.py and add environment variables:
+- `EMAIL_HOST_USER` - Gmail address
+- `EMAIL_HOST_PASSWORD` - Gmail App Password (not regular password, get from https://myaccount.google.com/apppasswords)
+
+### API Endpoints
+
+#### 1. Request Password Reset
+**Endpoint:** `POST /api/auth/password-reset/request/`
+
+**Request:**
+```json
+{"email": "user@example.com"}
+```
+
+**Response (Account Found):**
+```json
+{"found": true, "message": "Password reset email sent successfully."}
+```
+
+**Response (Account NOT Found):**
+```json
+{"found": false, "message": "No account found with that email address."}
+```
+
+**Implementation:** `backend/game/views.py` - `request_password_reset()` function
+- Looks up user by email with `User.objects.get(email=email)`
+- Generates secure token with `default_token_generator.make_token(user)`
+- Sends email with reset link: `http://localhost:3000/reset-password?token={token}&uid={user.pk}`
+- Returns `found` boolean to show different messages (account exists vs. not found)
+
+#### 2. Confirm Password Reset
+**Endpoint:** `POST /api/auth/password-reset/confirm/`
+
+**Request:**
+```json
+{"token": "abc123...", "uid": "1", "new_password": "newpassword123"}
+```
+
+**Success:** `{"message": "Password reset successful!"}`
+**Error:** `{"error": "Invalid or expired reset link"}` or `{"error": "Password must be at least 6 characters"}`
+
+**Implementation:** `backend/game/views.py` - `reset_password()` function
+- Validates token with `default_token_generator.check_token(user, token)`
+- Minimum password length: 6 characters
+- Updates password with `user.set_password(new_password)` (automatically hashes)
+- Token expires after 1 hour
+
+### Frontend User Flow
+
+**Step 1: Access Forgot Password**
+- User clicks "Login" → sees **"Forgot Password?"** button below login form
+- Button closes auth modal and opens password reset modal
+
+**Step 2: Request Reset**
+- User enters email address
+- Frontend POSTs to `/api/auth/password-reset/request/`
+- **If account found:** Green message "Password reset email sent to: cir***37@gmail.com"
+- **If NOT found:** Red error "No account found with that email address."
+
+**Step 3: Email Link (Development)**
+- Reset link is printed to Django terminal (console backend)
+- Developer copies link manually: `http://localhost:3000/reset-password?token=...&uid=1`
+- Example terminal output:
+  ```
+  Subject: Ghotidle - Password Reset Request
+  To: user@example.com
+  
+  Click the link to reset your password:
+  http://localhost:3000/reset-password?token=abc123...&uid=1
+  
+  This link expires in 1 hour.
+  ```
+
+**Step 4: URL Parameter Parsing**
+- App detects `?token=...&uid=...` in URL automatically
+- Opens password reset modal in "confirm" mode
+- Removes parameters from URL bar for security: `window.history.replaceState({}, document.title, window.location.pathname)`
+
+**Step 5: Set New Password**
+- User enters new password (min 6 chars, enforced by HTML5 `minLength={6}`)
+- Frontend POSTs to `/api/auth/password-reset/confirm/`
+- Success: "Password reset successful! Redirecting to login..."
+- After 2 seconds: Opens login modal, user can login with new password
+
+### Email Masking Function
+Located in `frontend/src/App.tsx`:
+```typescript
+const maskEmail = (email: string): string => {
+  const [localPart, domain] = email.split('@');
+  const maskedLocal = localPart.slice(0, 3) + '***';
+  const lastTwo = localPart.slice(-2);
+  return `${maskedLocal}${lastTwo}@${domain}`;
+};
+```
+
+**Examples:**
+- `circulating1337@gmail.com` → `cir***37@gmail.com`
+- `johndoe@example.com` → `joh***oe@example.com`
+
+### State Management
+Frontend state in `App.tsx`:
+```typescript
+const [showPasswordReset, setShowPasswordReset] = useState(false);  // Modal visibility
+const [resetStep, setResetStep] = useState<'request' | 'confirm'>('request');  // Two-step flow
+const [resetEmail, setResetEmail] = useState('');  // Email input
+const [resetToken, setResetToken] = useState('');  // Token from URL
+const [resetUid, setResetUid] = useState('');  // User ID from URL
+const [newPassword, setNewPassword] = useState('');  // New password input
+const [resetMessage, setResetMessage] = useState('');  // Success message
+const [resetError, setResetError] = useState('');  // Error message
+```
+
+### CSS Styling
+Located in `frontend/src/App.css`:
+
+```css
+.forgot-password-link {
+  background: none;
+  border: none;
+  color: #818384;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.forgot-password-link:hover {
+  color: #ffffff;
+}
+
+.success-message {
+  background-color: rgba(83, 141, 78, 0.2);
+  border: 1px solid #538d4e;
+  color: #6aaa64;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.error-message {
+  background-color: rgba(181, 59, 59, 0.2);
+  border: 1px solid #b53b3b;
+  color: #f87171;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  text-align: center;
+}
+```
+
+### Security Features
+- **Token-based authentication:** Uses Django's `default_token_generator` (cryptographically secure)
+- **Token expiry:** 1 hour (configurable via `PASSWORD_RESET_TIMEOUT`)
+- **URL cleanup:** Removes token from address bar after parsing (`window.history.replaceState`)
+- **Password validation:** Minimum 6 characters (frontend HTML5 + backend)
+- **Email enumeration trade-off:** Returns `found: true/false` for better UX (reveals if email exists). For more security, could always return same message regardless.
+
+### Testing in Development
+
+**Test Valid Email:**
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/auth/password-reset/request/" -Method Post -Body '{"email":"circulating1337@gmail.com"}' -ContentType "application/json"
+```
+
+**Current Database Users:**
+- Username: `admin`, Email: `circulating1337@gmail.com` (only this email works for testing)
+
+**Testing Steps:**
+1. Go to http://localhost:3000
+2. Click "Login" → "Forgot Password?"
+3. Enter `circulating1337@gmail.com`
+4. Click "Send Reset Link"
+5. Check **Django terminal** for reset link (NOT your email inbox!)
+6. Copy link and paste in browser
+7. Enter new password (min 6 chars)
+8. Submit → redirects to login
+9. Login with new password
+
+**Common Issue:** "No account found with that email address."
+- **Cause:** Email doesn't exist in database
+- **Solution:** Check existing users:
+  ```powershell
+  cd backend
+  python manage.py shell -c "from django.contrib.auth.models import User; [print(f'{u.username}: {u.email}') for u in User.objects.all()]"
+  ```
+
+### Production Deployment
+1. **Enable Gmail SMTP** in `settings.py` (uncomment SMTP config, comment out console backend)
+2. **Set environment variables:** `EMAIL_HOST_USER` and `EMAIL_HOST_PASSWORD`
+3. **Generate Gmail App Password:** https://myaccount.google.com/apppasswords (requires 2FA enabled)
+4. **Update reset link domain** in `views.py` line ~165: Change `http://localhost:3000` to production domain
+
+### Files Modified
+- `backend/ghotidle_backend/settings.py` - Email configuration
+- `backend/game/views.py` - Added `request_password_reset()` and `reset_password()` views
+- `backend/game/urls.py` - Added `/auth/password-reset/request/` and `/confirm/` routes
+- `frontend/src/App.tsx` - Password reset modal, state, handlers, email masking
+- `frontend/src/App.css` - Forgot password link and message styling

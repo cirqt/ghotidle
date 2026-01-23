@@ -18,10 +18,11 @@ interface GuessResult {
 interface AuthFormProps {
   mode: 'login' | 'register';
   onSubmit: (username: string, password: string, email?: string) => void;
+  onForgotPassword?: () => void;
 }
 
 // AuthForm component for login/register
-function AuthForm({ mode, onSubmit }: AuthFormProps) {
+function AuthForm({ mode, onSubmit, onForgotPassword }: AuthFormProps) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -82,6 +83,16 @@ function AuthForm({ mode, onSubmit }: AuthFormProps) {
       <button type="submit" className="submit-button">
         {mode === 'login' ? 'Login' : 'Register'}
       </button>
+
+      {mode === 'login' && onForgotPassword && (
+        <button 
+          type="button" 
+          className="forgot-password-link" 
+          onClick={onForgotPassword}
+        >
+          Forgot Password?
+        </button>
+      )}
     </form>
   );
 }
@@ -102,6 +113,16 @@ function App() {
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
   const [targetLength, setTargetLength] = useState(0);
   const [targetWord, setTargetWord] = useState(''); // The actual answer
+  
+  // Password reset state
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetStep, setResetStep] = useState<'request' | 'confirm'>('request');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [resetUid, setResetUid] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetError, setResetError] = useState('');
   
   // Admin form state
   const [adminMode, setAdminMode] = useState<'word' | 'pattern'>('word');
@@ -140,6 +161,22 @@ function App() {
       }
     };
     checkAuth();
+  }, []);
+
+  // Check for password reset token in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const uid = urlParams.get('uid');
+    
+    if (token && uid) {
+      setResetToken(token);
+      setResetUid(uid);
+      setResetStep('confirm');
+      setShowPasswordReset(true);
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
   // Auto-hide toast after 3 seconds
@@ -359,6 +396,106 @@ function App() {
     setShowAuth(false);
     setAuthMode('login');
     setError(''); // Clear any error messages
+  };
+
+  const maskEmail = (email: string): string => {
+    const [localPart, domain] = email.split('@');
+    if (!localPart || !domain) return email;
+    
+    // Show first 3 characters, mask the rest with ***
+    const maskedLocal = localPart.slice(0, 3) + '***';
+    
+    // Show last 2 characters before @
+    const lastTwo = localPart.slice(-2);
+    
+    return `${maskedLocal}${lastTwo}@${domain}`;
+  };
+
+  const handlePasswordResetRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    setResetMessage('');
+
+    if (!resetEmail.trim()) {
+      setResetError('Email is required');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/password-reset/request/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        if (data.found) {
+          const maskedEmail = maskEmail(resetEmail);
+          setResetMessage(`Password reset email sent to: ${maskedEmail}`);
+        } else {
+          setResetError('No account found with that email address.');
+        }
+        setResetEmail('');
+      } else {
+        setResetError(data.error || 'Failed to send reset email');
+      }
+    } catch (err) {
+      setResetError('Network error. Please try again.');
+      console.error('Password reset request error:', err);
+    }
+  };
+
+  const handlePasswordResetConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    setResetMessage('');
+
+    if (!newPassword.trim()) {
+      setResetError('New password is required');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setResetError('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/password-reset/confirm/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: resetToken,
+          uid: resetUid,
+          new_password: newPassword,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setResetMessage(data.message);
+        setNewPassword('');
+        // Close modal and redirect to login after 2 seconds
+        setTimeout(() => {
+          setShowPasswordReset(false);
+          setResetStep('request');
+          setShowAuth(true);
+          setAuthMode('login');
+        }, 2000);
+      } else {
+        setResetError(data.error || 'Failed to reset password');
+      }
+    } catch (err) {
+      setResetError('Network error. Please try again.');
+      console.error('Password reset confirm error:', err);
+    }
   };
 
   const handleSoundsChange = async (sounds: string) => {
@@ -612,6 +749,11 @@ function App() {
                 <AuthForm 
                   mode="login" 
                   onSubmit={(username, password) => handleLogin(username, password)}
+                  onForgotPassword={() => {
+                    setShowAuth(false);
+                    setShowPasswordReset(true);
+                    setResetStep('request');
+                  }}
                 />
               ) : (
                 <AuthForm 
@@ -800,6 +942,76 @@ function App() {
                   <button type="submit" className="submit-button">
                     Add Pattern
                   </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Reset Modal */}
+      {showPasswordReset && (
+        <div className="modal-overlay" onClick={() => setShowPasswordReset(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{resetStep === 'request' ? 'Reset Password' : 'Set New Password'}</h2>
+              <button 
+                className="modal-close" 
+                onClick={() => {
+                  setShowPasswordReset(false);
+                  setResetMessage('');
+                  setResetError('');
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              {resetMessage && <div className="success-message">{resetMessage}</div>}
+              {resetError && <div className="error-message">{resetError}</div>}
+              
+              {resetStep === 'request' ? (
+                <form onSubmit={handlePasswordResetRequest}>
+                  <div className="form-group">
+                    <label htmlFor="reset-email">Email Address</label>
+                    <input
+                      id="reset-email"
+                      type="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <button type="submit" className="submit-button">
+                    Send Reset Link
+                  </button>
+                  <p style={{ fontSize: '14px', marginTop: '10px', color: '#666' }}>
+                    We'll send you a link to reset your password.
+                  </p>
+                </form>
+              ) : (
+                <form onSubmit={handlePasswordResetConfirm}>
+                  <div className="form-group">
+                    <label htmlFor="new-password">New Password</label>
+                    <input
+                      id="new-password"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      required
+                      minLength={6}
+                      autoFocus
+                    />
+                  </div>
+                  <button type="submit" className="submit-button">
+                    Reset Password
+                  </button>
+                  <p style={{ fontSize: '14px', marginTop: '10px', color: '#666' }}>
+                    Password must be at least 6 characters long.
+                  </p>
                 </form>
               )}
             </div>

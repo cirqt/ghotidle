@@ -143,6 +143,74 @@ def get_current_user(request):
 
 @api_view(['POST'])
 @csrf_exempt
+def request_password_reset(request):
+    """Request password reset - sends email with reset token"""
+    from django.contrib.auth.tokens import default_token_generator
+    from django.core.mail import send_mail
+    from django.conf import settings
+    
+    email = request.data.get('email', '').strip().lower()
+    
+    if not email:
+        return Response({'error': 'Email is required'}, status=400)
+    
+    try:
+        user = User.objects.get(email=email)
+        
+        # Generate password reset token
+        token = default_token_generator.make_token(user)
+        
+        # In production, send this as a link to frontend
+        reset_link = f"http://localhost:3000/reset-password?token={token}&uid={user.pk}"
+        
+        # Send email
+        send_mail(
+            subject='Ghotidle - Password Reset Request',
+            message=f'Click the link to reset your password:\n\n{reset_link}\n\nThis link expires in 1 hour.\n\nIf you did not request this, please ignore this email.',
+            from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@ghotidle.com',
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        return Response({'found': True, 'message': 'Password reset email sent successfully.'})
+    except User.DoesNotExist:
+        return Response({'found': False, 'message': 'No account found with that email address.'})
+
+
+@api_view(['POST'])
+@csrf_exempt
+def reset_password(request):
+    """Reset password using token"""
+    from django.contrib.auth.tokens import default_token_generator
+    
+    token = request.data.get('token', '')
+    uid = request.data.get('uid', '')
+    new_password = request.data.get('new_password', '')
+    
+    if not token or not uid or not new_password:
+        return Response({'error': 'Token, user ID, and new password are required'}, status=400)
+    
+    if len(new_password) < 6:
+        return Response({'error': 'Password must be at least 6 characters'}, status=400)
+    
+    try:
+        user = User.objects.get(pk=uid)
+        
+        # Verify token
+        if not default_token_generator.check_token(user, token):
+            return Response({'error': 'Invalid or expired reset link'}, status=400)
+        
+        # Set new password
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({'message': 'Password reset successfully. You can now log in with your new password.'})
+    
+    except User.DoesNotExist:
+        return Response({'error': 'Invalid reset link'}, status=400)
+
+
+@api_view(['POST'])
+@csrf_exempt
 def suggest_phonetic_patterns(request):
     """Suggest phonetic patterns based on sound breakdown"""
     from .models import PhoneticPattern

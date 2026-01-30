@@ -1,5 +1,15 @@
 # Ghotidle - AI Coding Agent Instructions
 
+## Coding Guidelines
+
+**IMPORTANT:** Follow the principles in `.github/CLAUDE.md` for all code changes:
+1. **Think Before Coding** - State assumptions explicitly, surface tradeoffs, ask when unclear
+2. **Simplicity First** - Minimum code that solves the problem, no speculative features
+3. **Surgical Changes** - Touch only what's necessary, match existing style
+4. **Goal-Driven Execution** - Define verifiable success criteria, loop until verified
+
+See `.github/CLAUDE.md` for full details.
+
 ## Project Overview
 Ghotidle is a Wordle-style game with a phonetics twist - users guess words that can be spelled unconventionally based on English phonetic rules (like "ghoti" for "fish"). This is a **full-stack monorepo** with Django REST backend and React+TypeScript frontend.
 

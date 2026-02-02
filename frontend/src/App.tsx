@@ -537,6 +537,22 @@ function App() {
     }
   };
 
+  const handleRandomWord = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/words/random/`);
+      if (response.ok) {
+        const data = await response.json();
+        setAdminSecret(data.word);
+        setAdminError('');
+      } else {
+        setAdminError('Failed to get random word');
+      }
+    } catch (err) {
+      setAdminError('Error fetching random word');
+      console.error('Error:', err);
+    }
+  };
+
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAdminError('');
@@ -814,14 +830,25 @@ function App() {
                 
                 <div className="form-group">
                   <label htmlFor="secret">Standard Spelling</label>
-                  <input
-                    type="text"
-                    id="secret"
-                    placeholder="e.g., fish"
-                    maxLength={50}
-                    value={adminSecret}
-                    onChange={(e) => setAdminSecret(e.target.value)}
-                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      id="secret"
+                      placeholder="e.g., fish"
+                      maxLength={50}
+                      value={adminSecret}
+                      onChange={(e) => setAdminSecret(e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRandomWord}
+                      className="random-word-button"
+                      title="Get random word"
+                    >
+                      🎲
+                    </button>
+                  </div>
                   <span className="form-hint">The correct spelling players need to guess</span>
                 </div>
 

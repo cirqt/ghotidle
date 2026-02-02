@@ -643,6 +643,31 @@
   border-radius: 6px;
 }
 
+/* Random Word Button */
+.random-word-button {
+  background: linear-gradient(135deg, #6aaa64 0%, #538d4e 100%);
+  border: none;
+  color: white;
+  font-size: 18px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 45px;
+}
+
+.random-word-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(106, 170, 100, 0.4);
+}
+
+.random-word-button:active {
+  transform: scale(0.95);
+}
+
 /* Pattern Suggestions */
 .pattern-loading {
   text-align: center;

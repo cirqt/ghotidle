@@ -11,6 +11,7 @@ urlpatterns = [
     path('auth/password-reset/request/', views.request_password_reset, name='request_password_reset'),
     path('auth/password-reset/confirm/', views.reset_password, name='reset_password'),
     path('words/', views.create_word, name='create_word'),
+    path('words/random/', views.get_random_word, name='random_word'),
     path('phonetic-patterns/', views.create_phonetic_pattern, name='create_pattern'),
     path('phonetic-patterns/suggest/', views.suggest_phonetic_patterns, name='suggest_patterns'),
 ]

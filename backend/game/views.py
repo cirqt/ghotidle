@@ -365,3 +365,23 @@ def create_word(request):
         return Response({
             'error': f'Failed to create word: {str(e)}'
         }, status=500)
+
+
+@api_view(['GET'])
+def get_random_word(request):
+    """
+    Get a random valid word from the database
+    """
+    try:
+        word = ValidWord.objects.order_by('?').first()
+        if word:
+            return Response({
+                'word': word.word
+            })
+        return Response({
+            'error': 'No words found in database'
+        }, status=404)
+    except Exception as e:
+        return Response({
+            'error': f'Failed to get random word: {str(e)}'
+        }, status=500)

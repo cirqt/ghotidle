@@ -111,7 +111,6 @@ function App() {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [user, setUser] = useState<{username: string, email: string, is_superuser: boolean} | null>(null);
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
-  const [targetLength, setTargetLength] = useState(0);
   const [targetWord, setTargetWord] = useState(''); // The actual answer
   
   // Password reset state
@@ -222,7 +221,6 @@ function App() {
         // data.phonetic_spelling is "gh,o,ti" - join to create "GHOTI"
         const phonetic = data.phonetic_spelling.split(',').join('').toUpperCase();
         setPhoneticWord(phonetic);
-        setTargetLength(data.length);
         setTargetWord(data.word); // Store the answer for reveal
       } catch (err) {
         setError('Failed to load word. Make sure the backend is running.');
@@ -402,13 +400,20 @@ function App() {
     const [localPart, domain] = email.split('@');
     if (!localPart || !domain) return email;
     
-    // Show first 3 characters, mask the rest with ***
-    const maskedLocal = localPart.slice(0, 3) + '***';
+    const length = localPart.length;
     
-    // Show last 2 characters before @
-    const lastTwo = localPart.slice(-2);
+    // Calculate visible chars (30% of total, minimum 3)
+    const visibleCount = Math.max(3, Math.ceil(length * 0.3));
     
-    return `${maskedLocal}${lastTwo}@${domain}`;
+    // For short emails, show 1 at start and rest at end
+    // For longer emails, distribute more evenly
+    const startChars = length <= 6 ? 1 : Math.floor(visibleCount / 2);
+    const endChars = visibleCount - startChars;
+    
+    const start = localPart.slice(0, startChars);
+    const end = localPart.slice(-endChars);
+    
+    return `${start}***${end}@${domain}`;
   };
 
   const handlePasswordResetRequest = async (e: React.FormEvent) => {

@@ -346,8 +346,8 @@ def create_word(request):
         if pattern_ids:
             for pattern_id in pattern_ids:
                 PhoneticComponent.objects.create(
-                    wordId=word,
-                    patternId_id=pattern_id
+                    word=word,
+                    pattern_id=pattern_id
                 )
         
         return Response({

@@ -131,6 +131,7 @@ function App() {
   const [suggestedPatterns, setSuggestedPatterns] = useState<any[]>([]);
   const [selectedPatterns, setSelectedPatterns] = useState<number[]>([]);
   const [isLoadingPatterns, setIsLoadingPatterns] = useState(false);
+  const [noChangeSoundIndexes, setNoChangeSoundIndexes] = useState<number[]>([]);
   const [adminError, setAdminError] = useState('');
   const [adminSuccess, setAdminSuccess] = useState('');
   
@@ -509,6 +510,8 @@ function App() {
     // Clear suggestions if input is empty
     if (!sounds.trim()) {
       setSuggestedPatterns([]);
+      setSelectedPatterns([]);
+      setNoChangeSoundIndexes([]);
       return;
     }
 
@@ -591,6 +594,7 @@ function App() {
         setAdminSounds('');
         setSuggestedPatterns([]);
         setSelectedPatterns([]);
+        setNoChangeSoundIndexes([]);
         // Close modal after 1.5 seconds
         setTimeout(() => {
           setShowAdmin(false);
@@ -603,6 +607,19 @@ function App() {
     } catch (err) {
       setAdminError('Network error. Please try again.');
       console.error('Admin submit error:', err);
+    }
+  };
+
+  const toggleNoChangeForSound = (soundIndex: number, patternIds: number[]) => {
+    if (noChangeSoundIndexes.includes(soundIndex)) {
+      setNoChangeSoundIndexes(noChangeSoundIndexes.filter(index => index !== soundIndex));
+      return;
+    }
+
+    setNoChangeSoundIndexes([...noChangeSoundIndexes, soundIndex]);
+
+    if (patternIds.length > 0) {
+      setSelectedPatterns(selectedPatterns.filter(id => !patternIds.includes(id)));
     }
   };
 
@@ -889,9 +906,23 @@ function App() {
                     {suggestedPatterns.map((sound, soundIndex) => (
                       <div key={soundIndex} className="sound-group">
                         <h4>Sound: "{sound.sound}"</h4>
-                        {sound.patterns.length > 0 ? (
-                          <div className="pattern-options">
-                            {sound.patterns.map((pattern: any) => (
+                        <div className="pattern-options">
+                          <label className="pattern-option no-change-option">
+                            <input
+                              type="checkbox"
+                              checked={noChangeSoundIndexes.includes(soundIndex)}
+                              onChange={() => toggleNoChangeForSound(
+                                soundIndex,
+                                sound.patterns.map((pattern: any) => pattern.id)
+                              )}
+                            />
+                            <span className="pattern-letters">✓</span>
+                            <span className="pattern-sound">Keep as-is</span>
+                            <span className="pattern-reference">(no replacement for this sound)</span>
+                          </label>
+
+                          {sound.patterns.length > 0 ? (
+                            sound.patterns.map((pattern: any) => (
                               <label key={pattern.id} className="pattern-option">
                                 <input
                                   type="checkbox"
@@ -899,6 +930,9 @@ function App() {
                                   onChange={(e) => {
                                     if (e.target.checked) {
                                       setSelectedPatterns([...selectedPatterns, pattern.id]);
+                                      setNoChangeSoundIndexes(
+                                        noChangeSoundIndexes.filter(index => index !== soundIndex)
+                                      );
                                     } else {
                                       setSelectedPatterns(selectedPatterns.filter(id => id !== pattern.id));
                                     }
@@ -909,11 +943,11 @@ function App() {
                                 <span className="pattern-sound">{pattern.sound}</span>
                                 <span className="pattern-reference">(from "{pattern.reference}")</span>
                               </label>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="no-patterns">No patterns found for "{sound.sound}". You may need to add this pattern first.</p>
-                        )}
+                            ))
+                          ) : (
+                            <p className="no-patterns">No patterns found for "{sound.sound}". You may need to add this pattern first.</p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

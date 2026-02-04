@@ -725,6 +725,16 @@
   transition: all 0.2s;
 }
 
+.pattern-option.no-change-option {
+  background-color: rgba(83, 141, 78, 0.08);
+  border-color: rgba(83, 141, 78, 0.25);
+}
+
+.pattern-option.no-change-option:hover {
+  background-color: rgba(83, 141, 78, 0.15);
+  border-color: rgba(83, 141, 78, 0.4);
+}
+
 .pattern-option:hover {
   background-color: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.2);

@@ -575,6 +575,7 @@ function App() {
           phonetic: adminPhonetic.toLowerCase().trim(),
           sounds: adminSounds.toLowerCase().trim(),
           pattern_ids: selectedPatterns,
+          no_change_indexes: noChangeSoundIndexes,
         }),
       });
 

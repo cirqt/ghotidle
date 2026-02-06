@@ -316,6 +316,7 @@ def create_word(request):
     phonetic = request.data.get('phonetic', '').lower().strip()
     sounds = request.data.get('sounds', '').lower().strip()
     pattern_ids = request.data.get('pattern_ids', [])
+    no_change_indexes = request.data.get('no_change_indexes', [])
     
     # Validation
     if not secret or not phonetic:
@@ -353,22 +354,27 @@ def create_word(request):
         # Parse sounds to get position mapping
         sound_list = [s.strip() for s in sounds.split('-') if s.strip()] if sounds else []
         
-        # Associate selected phonetic patterns with the word, preserving position
-        # Frontend sends pattern_ids in order matching sound positions
-        if pattern_ids and sound_list:
-            position = 0
-            for sound_index, sound in enumerate(sound_list):
-                # Check if this sound position should keep original spelling
-                # (Frontend will handle this by not including pattern_id for keep-as-is sounds)
-                if sound_index < len(pattern_ids) and pattern_ids[sound_index]:
-                    pattern_id = pattern_ids[sound_index]
+        # Build position-to-pattern mapping
+        # selectedPatterns is a flat array of pattern IDs (excluding keep-as-is)
+        # no_change_indexes contains sound positions that should keep original spelling
+        
+        if sound_list:
+            pattern_idx = 0  # Index into the pattern_ids array
+            for position, sound in enumerate(sound_list):
+                if position in no_change_indexes:
+                    # Skip keep-as-is sounds - don't create PhoneticComponent
+                    # The absence of a component for this position indicates keep-as-is
+                    continue
+                
+                # Get the next pattern ID from the flat array
+                if pattern_idx < len(pattern_ids) and pattern_ids[pattern_idx]:
                     PhoneticComponent.objects.create(
                         word=word,
-                        pattern_id=pattern_id,
+                        pattern_id=pattern_ids[pattern_idx],
                         position=position,
                         no_change=False
                     )
-                    position += 1
+                    pattern_idx += 1
         
         return Response({
             'message': 'Word created successfully',
@@ -377,7 +383,8 @@ def create_word(request):
                 'phonetic': word.phonetic,
                 'date': word.date.isoformat(),
                 'sounds': sounds,
-                'pattern_count': len(pattern_ids) if pattern_ids else 0
+                'pattern_count': len([p for p in pattern_ids if p]) if pattern_ids else 0,
+                'keep_as_is_count': len(no_change_indexes)
             }
         }, status=201)
     

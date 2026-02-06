@@ -157,7 +157,6 @@ function App() {
         }
       } catch (err) {
         // User not logged in, that's ok
-        console.log('Not logged in');
       }
     };
     checkAuth();
@@ -323,7 +322,6 @@ function App() {
 
   const handleLogin = async (username: string, password: string) => {
     try {
-      console.log('Attempting login for:', username);
       const response = await fetch(`${API_BASE_URL}/auth/login/`, {
         method: 'POST',
         headers: {
@@ -332,17 +330,13 @@ function App() {
         credentials: 'include', // Important: include session cookie
         body: JSON.stringify({ username, password }),
       });
-
-      console.log('Login response status:', response.status);
       
       if (response.ok) {
         const userData = await response.json();
-        console.log('Login successful:', userData);
         setUser(userData);
         closeAuthModal();
       } else {
         const data = await response.json();
-        console.log('Login failed:', data);
         setError(data.error || 'Login failed');
       }
     } catch (err) {
@@ -378,14 +372,11 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      console.log('Attempting logout...');
       const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
         method: 'POST',
         credentials: 'include', // Important: include session cookie
       });
-      console.log('Logout response status:', response.status);
       setUser(null);
-      console.log('User state cleared');
     } catch (err) {
       console.error('Logout error:', err);
     }

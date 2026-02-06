@@ -163,10 +163,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Disable CSRF for API endpoints (we're using session auth with CORS)
-CSRF_COOKIE_HTTPONLY = False
-CSRF_USE_SESSIONS = False
-
 # Email Configuration
 # For development: Console backend (prints emails to terminal)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

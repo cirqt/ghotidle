@@ -354,6 +354,13 @@ def create_word(request):
         # Parse sounds to get position mapping
         sound_list = [s.strip() for s in sounds.split('-') if s.strip()] if sounds else []
         
+        # Get or create the identity pattern for keep-as-is sounds
+        identity_pattern, _ = PhoneticPattern.objects.get_or_create(
+            letters='*',
+            sound='*',
+            reference='identity'
+        )
+        
         # Build position-to-pattern mapping
         # selectedPatterns is a flat array of pattern IDs (excluding keep-as-is)
         # no_change_indexes contains sound positions that should keep original spelling
@@ -362,19 +369,23 @@ def create_word(request):
             pattern_idx = 0  # Index into the pattern_ids array
             for position, sound in enumerate(sound_list):
                 if position in no_change_indexes:
-                    # Skip keep-as-is sounds - don't create PhoneticComponent
-                    # The absence of a component for this position indicates keep-as-is
-                    continue
-                
-                # Get the next pattern ID from the flat array
-                if pattern_idx < len(pattern_ids) and pattern_ids[pattern_idx]:
+                    # Create PhoneticComponent with identity pattern and no_change=True
                     PhoneticComponent.objects.create(
                         word=word,
-                        pattern_id=pattern_ids[pattern_idx],
+                        pattern_id=identity_pattern.id,
                         position=position,
-                        no_change=False
+                        no_change=True
                     )
-                    pattern_idx += 1
+                else:
+                    # Get the next pattern ID from the flat array
+                    if pattern_idx < len(pattern_ids) and pattern_ids[pattern_idx]:
+                        PhoneticComponent.objects.create(
+                            word=word,
+                            pattern_id=pattern_ids[pattern_idx],
+                            position=position,
+                            no_change=False
+                        )
+                        pattern_idx += 1
         
         return Response({
             'message': 'Word created successfully',

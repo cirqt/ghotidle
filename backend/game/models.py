@@ -60,15 +60,18 @@ class PhoneticComponent(models.Model):
     """Junction table linking words to their phonetic patterns"""
     word = models.ForeignKey(Word, on_delete=models.CASCADE, db_column='wordId')
     pattern = models.ForeignKey(PhoneticPattern, on_delete=models.RESTRICT, db_column='patternId')
+    position = models.IntegerField(default=0)  # Position in the phonetic breakdown (0-indexed)
+    no_change = models.BooleanField(default=False)  # True if this sound keeps original spelling
     
     class Meta:
         db_table = 'phoneticComponent'
         verbose_name = 'Phonetic Component'
         verbose_name_plural = 'Phonetic Components'
-        unique_together = [['word', 'pattern']]
+        unique_together = [['word', 'position']]
+        ordering = ['word', 'position']
     
     def __str__(self):
-        return f"{self.word.phonetic} uses {self.pattern.letters}"
+        return f"{self.word.phonetic}[{self.position}]: {self.pattern.letters if not self.no_change else 'keep-as-is'}"
 
 
 class UserStats(models.Model):

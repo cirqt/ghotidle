@@ -195,6 +195,8 @@ python backend/data/load_valid_words.py
   1. First loop: Mark exact position matches as 'correct', remove from remaining pool
   2. Second loop: Check remaining letters against remaining pool for 'present'
 - **No serializers yet**: Views return plain dict responses, no DRF serializers defined
+  - **Note (Feb 2026)**: This is intentional for prototyping. Manual dict responses are being used temporarily while building puzzle word content. Will migrate to DRF serializers later for consistency and validation.
+- **FIFO Word Queue**: Word creation automatically assigns next available date (latest word's date + 1 day). First word starts with today's date.
 
 ### CORS Configuration
 `settings.py` explicitly allows `localhost:3000` and `127.0.0.1:3000`. When adding new frontend URLs or deployment, update `CORS_ALLOWED_ORIGINS`.
@@ -391,7 +393,12 @@ python manage.py loaddata fixtures/game_data.json
 
 1. **Password Security**: Django uses PBKDF2-SHA256 hashing. Passwords are salted and cannot be reverse-engineered from the database.
 
-2. **Sessions Don't Transfer**: Login sessions are tied to the server's SECRET_KEY. Users must log in again on a new workstation unless you:
+2. **SECRET_KEY Updated**: The Django SECRET_KEY was regenerated on **February 5, 2026** and stored in `backend/.env`. If setting up on another workstation, you'll need to either:
+   - Copy the `.env` file from this workstation (not in git)
+   - Generate a new key: `python -c "import secrets; print(secrets.token_urlsafe(50))"`
+   - Update `backend/.env` with: `DJANGO_SECRET_KEY=<your-new-key>`
+
+3. **Sessions Don't Transfer**: Login sessions are tied to the server's SECRET_KEY. Users must log in again on a new workstation unless you:
    - Keep the same SECRET_KEY in settings.py
    - Import the django_session table data
 

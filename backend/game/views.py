@@ -305,8 +305,8 @@ def create_phonetic_pattern(request):
 @csrf_exempt
 def create_word(request):
     """Create a new puzzle word - admin only"""
-    from .models import Word, PhoneticComponent
-    from datetime import date
+    from .models import Word, PhoneticComponent, PhoneticPattern
+    from datetime import date, timedelta
     
     # Check if user is authenticated and is superuser
     if not request.user.is_authenticated or not request.user.is_superuser:
@@ -335,20 +335,40 @@ def create_word(request):
         return Response({'error': f'Word "{secret}" already exists'}, status=400)
     
     try:
-        # Create the word with today's date (for now)
+        # FIFO: Assign next available date after the latest word
+        latest_word = Word.objects.order_by('-date').first()
+        if latest_word:
+            next_date = latest_word.date + timedelta(days=1)
+        else:
+            # No words yet, start with today
+            next_date = date.today()
+        
+        # Create the word with auto-assigned date
         word = Word.objects.create(
             secret=secret,
             phonetic=phonetic,
-            date=date.today()
+            date=next_date
         )
         
-        # Associate selected phonetic patterns with the word
-        if pattern_ids:
-            for pattern_id in pattern_ids:
-                PhoneticComponent.objects.create(
-                    word=word,
-                    pattern_id=pattern_id
-                )
+        # Parse sounds to get position mapping
+        sound_list = [s.strip() for s in sounds.split('-') if s.strip()] if sounds else []
+        
+        # Associate selected phonetic patterns with the word, preserving position
+        # Frontend sends pattern_ids in order matching sound positions
+        if pattern_ids and sound_list:
+            position = 0
+            for sound_index, sound in enumerate(sound_list):
+                # Check if this sound position should keep original spelling
+                # (Frontend will handle this by not including pattern_id for keep-as-is sounds)
+                if sound_index < len(pattern_ids) and pattern_ids[sound_index]:
+                    pattern_id = pattern_ids[sound_index]
+                    PhoneticComponent.objects.create(
+                        word=word,
+                        pattern_id=pattern_id,
+                        position=position,
+                        no_change=False
+                    )
+                    position += 1
         
         return Response({
             'message': 'Word created successfully',
@@ -357,7 +377,7 @@ def create_word(request):
                 'phonetic': word.phonetic,
                 'date': word.date.isoformat(),
                 'sounds': sounds,
-                'pattern_count': len(pattern_ids)
+                'pattern_count': len(pattern_ids) if pattern_ids else 0
             }
         }, status=201)
     

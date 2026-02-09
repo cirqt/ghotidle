@@ -112,6 +112,7 @@ function App() {
   const [user, setUser] = useState<{username: string, email: string, is_superuser: boolean} | null>(null);
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
   const [targetWord, setTargetWord] = useState(''); // The actual answer
+  const [phoneticPatterns, setPhoneticPatterns] = useState<Array<{letters: string, sound: string, reference: string}>>([]);
   
   // Password reset state
   const [showPasswordReset, setShowPasswordReset] = useState(false);
@@ -222,6 +223,7 @@ function App() {
         const phonetic = data.phonetic_spelling.split(',').join('').toUpperCase();
         setPhoneticWord(phonetic);
         setTargetWord(data.word); // Store the answer for reveal
+        setPhoneticPatterns(data.phonetic_patterns || []); // Store patterns for end-game reveal
       } catch (err) {
         setError('Failed to load word. Make sure the backend is running.');
         console.error('Error fetching word:', err);
@@ -746,6 +748,53 @@ function App() {
               <p className="phonetic-explanation">
                 Phonetically: <strong>{phoneticWord}</strong>
               </p>
+              
+              {phoneticPatterns.length > 0 && (
+                <div className="phonetic-breakdown">
+                  <h3>How it's spelled:</h3>
+                  {phoneticPatterns.map((pattern, idx) => (
+                    <div key={idx} className="phonetic-pattern-row">
+                      <span className="pattern-letters">{pattern.letters.toUpperCase()}</span>
+                      <span className="pattern-arrow">→</span>
+                      <span className="pattern-sound">"{pattern.sound}"</span>
+                      <span className="pattern-reference">(from <em>{pattern.reference}</em>)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Game Won Modal */}
+      {gameWon && (
+        <div className="modal-overlay" onClick={() => setGameWon(false)}>
+          <div className="modal-content game-over-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🎉 You won!</h2>
+              <button className="modal-close" onClick={() => setGameWon(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p className="game-over-label">The word was:</p>
+              <div className="revealed-word">{targetWord.toUpperCase()}</div>
+              <p className="phonetic-explanation">
+                Phonetically: <strong>{phoneticWord}</strong>
+              </p>
+              
+              {phoneticPatterns.length > 0 && (
+                <div className="phonetic-breakdown">
+                  <h3>Here's how it's spelled:</h3>
+                  {phoneticPatterns.map((pattern, idx) => (
+                    <div key={idx} className="phonetic-pattern-row">
+                      <span className="pattern-letters">{pattern.letters.toUpperCase()}</span>
+                      <span className="pattern-arrow">→</span>
+                      <span className="pattern-sound">"{pattern.sound}"</span>
+                      <span className="pattern-reference">(from <em>{pattern.reference}</em>)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

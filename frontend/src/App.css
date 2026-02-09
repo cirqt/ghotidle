@@ -422,11 +422,71 @@
   font-size: 1rem;
   color: #a0a0a0;
   margin: 0 !important;
+  margin-bottom: 20px !important;
 }
 
 .phonetic-explanation strong {
   color: #d7dadc;
   font-size: 1.1rem;
+}
+
+/* Phonetic Breakdown Card */
+.phonetic-breakdown {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.phonetic-breakdown h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.phonetic-pattern-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+}
+
+.phonetic-pattern-row:last-child {
+  border-bottom: none;
+}
+
+.pattern-letters {
+  font-weight: 700;
+  color: #6aaa64;
+  min-width: 50px;
+  font-size: 15px;
+}
+
+.pattern-arrow {
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+}
+
+.pattern-sound {
+  font-weight: 600;
+  color: #b59f3b;
+  min-width: 60px;
+}
+
+.pattern-reference {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+}
+
+.pattern-reference em {
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
 }
 
 .modal-body li {

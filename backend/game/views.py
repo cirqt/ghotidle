@@ -10,12 +10,20 @@ from .models import ValidWord  # Import the ValidWord model
 @api_view(['GET'])
 def get_word(request):
     """
-    Simple GET endpoint: returns the target word with phonetic components
+    Simple GET endpoint: returns the target word with phonetic components and pattern details
     """
+    # Hardcoded for now, will be replaced with database query for daily word system
+    phonetic_patterns = [
+        {'letters': 'gh', 'sound': 'f', 'reference': 'enough'},
+        {'letters': 'o', 'sound': 'i', 'reference': 'women'},
+        {'letters': 'ti', 'sound': 'sh', 'reference': 'nation'},
+    ]
+    
     return Response({
         'word': 'fish',
         'phonetic_spelling': 'gh,o,ti',  # Split by phonetic components
-        'length': 4
+        'length': 4,
+        'phonetic_patterns': phonetic_patterns
     })
 
 

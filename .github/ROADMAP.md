@@ -116,6 +116,7 @@ Phonetically: GHOTI
 
 | Issue | Impact | Notes |
 |-------|--------|-------|
+| Loss modal doesn't show phonetic patterns | Medium | Only displays on win. Frontend logic needs fix for loss scenario |
 | `/api/word/` hardcoded to "fish" | Critical | Blocks daily word system |
 | No phonetic highlighting | Minor | Could highlight "ti" in GHOTI |
 | Stats UI missing | Medium | Data exists, just no display |

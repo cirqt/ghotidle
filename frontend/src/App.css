@@ -334,7 +334,6 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-header h2 {
@@ -409,12 +408,25 @@
   text-align: center;
   padding: 24px;
   margin: 0 0 20px 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: transparent;
   border-radius: 12px;
-  color: #ffffff;
   letter-spacing: 0.2em;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  text-shadow: none;
+  box-shadow: none;
+}
+
+.revealed-word.won {
+  background: linear-gradient(135deg, #a8ff6a 0%, #6aaa64 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.revealed-word.lost {
+  background: linear-gradient(135deg, #ff6b6b 0%, #d32f2f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .phonetic-explanation {
@@ -948,5 +960,113 @@
 }
 
 .admin-button:active {
+  transform: translateY(0);
+}
+/* Game End Modal Styles */
+.game-end-modal {
+  animation: slideDown 0.4s ease-out;
+  max-width: 600px;
+}
+
+.game-end-info {
+  text-align: center;
+}
+
+.game-end-message {
+  font-size: 1.2rem;
+  margin-bottom: 24px;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.phonetic-breakdown {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: left;
+}
+
+.phonetic-breakdown h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-align: center;
+}
+
+.breakdown-word {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #6aaa64, #538d4e);
+  color: #ffffff;
+  letter-spacing: 4px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.breakdown-patterns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.breakdown-letters {
+  color: #6aaa64;
+  font-weight: bold;
+  font-size: 1.2rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+.breakdown-arrow {
+  color: #818384;
+  font-size: 1.2rem;
+}
+
+.breakdown-sound {
+  color: #ffffff;
+  font-weight: 500;
+  min-width: 50px;
+  text-align: center;
+}
+
+.breakdown-reference {
+  color: #818384;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.modal-button {
+  background: linear-gradient(135deg, #6aaa64, #538d4e);
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.modal-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(106, 170, 100, 0.4);
+}
+
+.modal-button:active {
   transform: translateY(0);
 }

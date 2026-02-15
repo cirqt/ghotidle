@@ -744,7 +744,7 @@ function App() {
             </div>
             <div className="modal-body">
               <p className="game-over-label">The word was:</p>
-              <div className="revealed-word">{targetWord.toUpperCase()}</div>
+              <div className="revealed-word lost">{targetWord.toUpperCase()}</div>
               <p className="phonetic-explanation">
                 Phonetically: <strong>{phoneticWord}</strong>
               </p>
@@ -777,7 +777,7 @@ function App() {
             </div>
             <div className="modal-body">
               <p className="game-over-label">The word was:</p>
-              <div className="revealed-word">{targetWord.toUpperCase()}</div>
+              <div className="revealed-word won">{targetWord.toUpperCase()}</div>
               <p className="phonetic-explanation">
                 Phonetically: <strong>{phoneticWord}</strong>
               </p>

@@ -9,42 +9,12 @@
 - Valid word dictionary (97k words)
 - Game validation with Wordle-style feedback (green/yellow/gray)
 - Physical + on-screen keyboard
+- **Game End Phonetic Reveal** - Shows pattern breakdown on win/loss
 
 ## 🔄 Current Sprint (In Progress)
 
-### 1. Game End Phonetic Reveal
-**Status:** Starting
-**Description:** When a player loses, show the pattern breakdown explaining the phonetic spelling.
-
-**Example Output:**
-```
-The word was: FISH
-
-Phonetically: GHOTI
-  GH → "f" (from enough)
-  O  → "i" (from women)
-  TI → "sh" (from nation)
-```
-
-**Implementation Tasks:**
-- Modify `/api/word/` endpoint to return phonetic patterns with each word
-- Update loss modal to display pattern breakdown
-- Test with multiple words to ensure clarity
-
-**Backend Changes Needed:**
-- `GET /api/word/` response should include pattern details, not just comma-separated string
-- Query PhoneticComponent and PhoneticPattern relationships
-
-**Frontend Changes Needed:**
-- Parse pattern details from API response
-- Render pattern breakdown in loss modal
-
-**Decision:** Show reveal on **loss only** (for now). Can add educational reveal on win later.
-
----
-
-### 2. Stats Display UI
-**Status:** Starting
+### Stats Display UI
+**Status:** Next Up
 **Description:** Display player's statistics (win/loss record, current streak, win rate).
 
 **Implementation Tasks:**
@@ -116,7 +86,6 @@ Phonetically: GHOTI
 
 | Issue | Impact | Notes |
 |-------|--------|-------|
-| Loss modal doesn't show phonetic patterns | Medium | Only displays on win. Frontend logic needs fix for loss scenario |
 | `/api/word/` hardcoded to "fish" | Critical | Blocks daily word system |
 | No phonetic highlighting | Minor | Could highlight "ti" in GHOTI |
 | Stats UI missing | Medium | Data exists, just no display |
@@ -126,12 +95,6 @@ Phonetically: GHOTI
 ---
 
 ## 🎯 Definition of Done (Current Sprint)
-
-### Game End Reveal
-- [ ] `/api/word/` returns pattern details
-- [ ] Loss modal displays phonetic breakdown with reference words
-- [ ] Tested with 3+ different words
-- [ ] Clear and readable UI (no overflow/truncation)
 
 ### Stats Display
 - [ ] Stats component/modal exists
@@ -143,11 +106,12 @@ Phonetically: GHOTI
 
 ## 📊 Implementation Order
 
-1. **Game End Reveal** (2-3 hours)
-   - Backend: Modify word endpoint
-   - Frontend: Parse and display patterns
+1. ~~**Game End Reveal**~~ ✅ **COMPLETED** (Feb 15, 2026)
+   - Backend: Already returns pattern details in `/api/word/` endpoint
+   - Frontend: Added game end modal showing phonetic breakdown on win/loss
+   - Time: ~1 hour
    
-2. **Stats Display** (2-3 hours)
+2. **Stats Display** (Next - 2-3 hours)
    - Backend: Create stats endpoint
    - Frontend: Build stats UI
 
@@ -185,5 +149,5 @@ Phonetically: GHOTI
 
 ---
 
-**Last Updated:** February 9, 2026
-**Next Review:** After completing Game End Reveal
+**Last Updated:** February 15, 2026
+**Next Review:** After completing Stats Display UI

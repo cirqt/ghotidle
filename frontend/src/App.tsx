@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import AdminModal from './components/AdminModal';
+import AuthModal from './components/AuthModal';
+import GameOverModal from './components/GameOverModal';
+import InfoModal from './components/InfoModal';
+import MenuBar from './components/MenuBar';
+import PasswordResetModal from './components/PasswordResetModal';
 import Keyboard from './components/Keyboard';
 
 interface LetterFeedback {
@@ -13,88 +19,6 @@ interface GuessResult {
   feedback: LetterFeedback[];
   is_correct: boolean;
   length_match: boolean;
-}
-
-interface AuthFormProps {
-  mode: 'login' | 'register';
-  onSubmit: (username: string, password: string, email?: string) => void;
-  onForgotPassword?: () => void;
-}
-
-// AuthForm component for login/register
-function AuthForm({ mode, onSubmit, onForgotPassword }: AuthFormProps) {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  // Reset form when mode changes
-  useEffect(() => {
-    setUsername('');
-    setEmail('');
-    setPassword('');
-  }, [mode]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(username, password, email);
-    // Clear form after submission
-    setUsername('');
-    setEmail('');
-    setPassword('');
-  };
-
-  return (
-    <form className="auth-form" onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label htmlFor="username">Username</label>
-        <input
-          type="text"
-          id="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-      </div>
-
-      {mode === 'register' && (
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-      )}
-
-      <div className="form-group">
-        <label htmlFor="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-
-      <button type="submit" className="submit-button">
-        {mode === 'login' ? 'Login' : 'Register'}
-      </button>
-
-      {mode === 'login' && onForgotPassword && (
-        <button 
-          type="button" 
-          className="forgot-password-link" 
-          onClick={onForgotPassword}
-        >
-          Forgot Password?
-        </button>
-      )}
-    </form>
-  );
 }
 
 function App() {
@@ -669,462 +593,104 @@ function App() {
 
   return (
     <div className="App">
-      <header className="menu-bar">
-        <div className="menu-left">
-          <h1 className="menu-title">Ghotidle</h1>
-          <button className="info-icon-button" onClick={() => setShowInfo(true)} aria-label="How to play">
-            ⓘ
-          </button>
-        </div>
-        <div className="menu-right">
-          {user?.is_superuser && (
-            <button className="admin-button" onClick={() => setShowAdmin(true)} aria-label="Admin Panel">
-              ⚙️ Admin
-            </button>
-          )}
-          {user ? (
-            <div className="user-menu">
-              <span className="username">{user.username}</span>
-              <button className="logout-button" onClick={handleLogout}>Logout</button>
-            </div>
-          ) : (
-            <button className="user-icon-button" onClick={() => setShowAuth(true)} aria-label="Sign in / Sign up">
-              <svg className="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="8" r="4"/>
-                <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
-              </svg>
-            </button>
-          )}
-        </div>
-      </header>
+      <MenuBar
+        user={user}
+        onShowInfo={() => setShowInfo(true)}
+        onShowAdmin={() => setShowAdmin(true)}
+        onShowAuth={() => setShowAuth(true)}
+        onLogout={handleLogout}
+      />
 
-      {showInfo && (
-        <div className="modal-overlay" onClick={() => setShowInfo(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>How to Play</h2>
-              <button className="modal-close" onClick={() => setShowInfo(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p><strong>Ghotidle</strong> is a reverse phonetic puzzle game!</p>
-              
-              <p>You'll see an unconventionally spelled word using English phonetic patterns. Your goal is to guess the standard spelling.</p>
-              
-              <div className="example-box">
-                <p className="example-title">Example:</p>
-                <p>Displayed word: <strong>GHOTI</strong></p>
-                <p>Standard spelling: <strong>FISH</strong></p>
-                <ul>
-                  <li><strong>GH</strong> = "f" (as in "enou<strong>gh</strong>")</li>
-                  <li><strong>O</strong> = "i" (as in "w<strong>o</strong>men")</li>
-                  <li><strong>TI</strong> = "sh" (as in "na<strong>ti</strong>on")</li>
-                </ul>
-              </div>
-              
-              <p><strong>Color coding:</strong></p>
-              <ul>
-                <li><span className="color-demo correct">Green</span> = Correct letter in correct position</li>
-                <li><span className="color-demo present">Yellow</span> = Letter exists but wrong position</li>
-                <li><span className="color-demo absent">Gray</span> = Letter not in word</li>
-              </ul>
-              
-              <p>You have <strong>5 attempts</strong> to guess the word. Good luck!</p>
-            </div>
-          </div>
-        </div>
-      )}
+      <InfoModal isOpen={showInfo} onClose={() => setShowInfo(false)} />
 
-      {/* Game Lost Modal */}
-      {gameLost && (
-        <div className="modal-overlay" onClick={() => setGameLost(false)}>
-          <div className="modal-content game-over-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Better luck next time!</h2>
-              <button className="modal-close" onClick={() => setGameLost(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p className="game-over-label">The word was:</p>
-              <div className="revealed-word lost">{targetWord.toUpperCase()}</div>
-              <p className="phonetic-explanation">
-                Phonetically: <strong>{phoneticWord}</strong>
-              </p>
-              
-              {phoneticPatterns.length > 0 && (
-                <div className="phonetic-breakdown">
-                  <h3>How it's spelled:</h3>
-                  {phoneticPatterns.map((pattern, idx) => (
-                    <div key={idx} className="phonetic-pattern-row">
-                      <span className="pattern-letters">{pattern.letters.toUpperCase()}</span>
-                      <span className="pattern-arrow">→</span>
-                      <span className="pattern-sound">"{pattern.sound}"</span>
-                      <span className="pattern-reference">(from <em>{pattern.reference}</em>)</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <GameOverModal
+        isOpen={gameLost}
+        onClose={() => setGameLost(false)}
+        title="Better luck next time!"
+        breakdownTitle="How it's spelled:"
+        resultClass="lost"
+        targetWord={targetWord}
+        phoneticWord={phoneticWord}
+        phoneticPatterns={phoneticPatterns}
+      />
 
-      {/* Game Won Modal */}
-      {gameWon && (
-        <div className="modal-overlay" onClick={() => setGameWon(false)}>
-          <div className="modal-content game-over-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>🎉 You won!</h2>
-              <button className="modal-close" onClick={() => setGameWon(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p className="game-over-label">The word was:</p>
-              <div className="revealed-word won">{targetWord.toUpperCase()}</div>
-              <p className="phonetic-explanation">
-                Phonetically: <strong>{phoneticWord}</strong>
-              </p>
-              
-              {phoneticPatterns.length > 0 && (
-                <div className="phonetic-breakdown">
-                  <h3>Here's how it's spelled:</h3>
-                  {phoneticPatterns.map((pattern, idx) => (
-                    <div key={idx} className="phonetic-pattern-row">
-                      <span className="pattern-letters">{pattern.letters.toUpperCase()}</span>
-                      <span className="pattern-arrow">→</span>
-                      <span className="pattern-sound">"{pattern.sound}"</span>
-                      <span className="pattern-reference">(from <em>{pattern.reference}</em>)</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <GameOverModal
+        isOpen={gameWon}
+        onClose={() => setGameWon(false)}
+        title="🎉 You won!"
+        breakdownTitle="Here's how it's spelled:"
+        resultClass="won"
+        targetWord={targetWord}
+        phoneticWord={phoneticWord}
+        phoneticPatterns={phoneticPatterns}
+      />
 
-      {/* Auth Modal */}
-      {showAuth && (
-        <div className="modal-overlay" onClick={closeAuthModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{authMode === 'login' ? 'Login' : 'Register'}</h2>
-              <button className="modal-close" onClick={closeAuthModal}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="auth-tabs">
-                <button 
-                  className={`auth-tab ${authMode === 'login' ? 'active' : ''}`}
-                  onClick={() => setAuthMode('login')}
-                >
-                  Login
-                </button>
-                <button 
-                  className={`auth-tab ${authMode === 'register' ? 'active' : ''}`}
-                  onClick={() => setAuthMode('register')}
-                >
-                  Register
-                </button>
-              </div>
+      <AuthModal
+        isOpen={showAuth}
+        mode={authMode}
+        onClose={closeAuthModal}
+        onModeChange={(mode) => setAuthMode(mode)}
+        onLogin={(username, password) => handleLogin(username, password)}
+        onRegister={(username, password, email) => handleRegister(username, email || '', password)}
+        onForgotPassword={() => {
+          setShowAuth(false);
+          setShowPasswordReset(true);
+          setResetStep('request');
+        }}
+      />
 
-              {authMode === 'login' ? (
-                <AuthForm 
-                  mode="login" 
-                  onSubmit={(username, password) => handleLogin(username, password)}
-                  onForgotPassword={() => {
-                    setShowAuth(false);
-                    setShowPasswordReset(true);
-                    setResetStep('request');
-                  }}
-                />
-              ) : (
-                <AuthForm 
-                  mode="register" 
-                  onSubmit={(username, password, email) => handleRegister(username, email || '', password)}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <AdminModal
+        isOpen={showAdmin}
+        onClose={() => setShowAdmin(false)}
+        adminMode={adminMode}
+        onSelectMode={(mode) => {
+          setAdminMode(mode);
+          setAdminError('');
+          setAdminSuccess('');
+        }}
+        adminError={adminError}
+        adminSuccess={adminSuccess}
+        adminSecret={adminSecret}
+        adminPhonetic={adminPhonetic}
+        adminSounds={adminSounds}
+        onAdminSecretChange={(value) => setAdminSecret(value)}
+        onAdminPhoneticChange={(value) => setAdminPhonetic(value)}
+        onAdminSoundsChange={(value) => handleSoundsChange(value)}
+        onAdminSubmit={handleAdminSubmit}
+        onRandomWord={handleRandomWord}
+        isLoadingPatterns={isLoadingPatterns}
+        suggestedPatterns={suggestedPatterns}
+        noChangeSoundIndexes={noChangeSoundIndexes}
+        selectedPatterns={selectedPatterns}
+        onToggleNoChangeForSound={toggleNoChangeForSound}
+        setSelectedPatterns={setSelectedPatterns}
+        setNoChangeSoundIndexes={setNoChangeSoundIndexes}
+        patternLetters={patternLetters}
+        patternSound={patternSound}
+        patternReference={patternReference}
+        onPatternLettersChange={(value) => setPatternLetters(value)}
+        onPatternSoundChange={(value) => setPatternSound(value)}
+        onPatternReferenceChange={(value) => setPatternReference(value)}
+        onPatternSubmit={handlePatternSubmit}
+      />
 
-      {/* Admin Modal */}
-      {showAdmin && (
-        <div className="modal-overlay" onClick={() => setShowAdmin(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Admin Panel</h2>
-              <button className="modal-close" onClick={() => setShowAdmin(false)}>×</button>
-            </div>
-            
-            {/* Admin Tabs */}
-            <div className="admin-tabs">
-              <button 
-                className={`admin-tab ${adminMode === 'word' ? 'active' : ''}`}
-                onClick={() => {
-                  setAdminMode('word');
-                  setAdminError('');
-                  setAdminSuccess('');
-                }}
-              >
-                Add Word
-              </button>
-              <button 
-                className={`admin-tab ${adminMode === 'pattern' ? 'active' : ''}`}
-                onClick={() => {
-                  setAdminMode('pattern');
-                  setAdminError('');
-                  setAdminSuccess('');
-                }}
-              >
-                Add Pattern
-              </button>
-            </div>
-
-            <div className="modal-body">
-              {adminError && <div className="error-message">{adminError}</div>}
-              {adminSuccess && <div className="success-message">{adminSuccess}</div>}
-
-              {/* Word Form */}
-              {adminMode === 'word' && (
-                <form className="admin-form" onSubmit={handleAdminSubmit}>
-                
-                <div className="form-group">
-                  <label htmlFor="secret">Standard Spelling</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="text"
-                      id="secret"
-                      placeholder="e.g., fish"
-                      maxLength={50}
-                      value={adminSecret}
-                      onChange={(e) => setAdminSecret(e.target.value)}
-                      style={{ flex: 1 }}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRandomWord}
-                      className="random-word-button"
-                      title="Get random word"
-                    >
-                      🎲
-                    </button>
-                  </div>
-                  <span className="form-hint">The correct spelling players need to guess</span>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="phonetic">Phonetic Spelling</label>
-                  <input
-                    type="text"
-                    id="phonetic"
-                    placeholder="e.g., ghoti"
-                    maxLength={50}
-                    value={adminPhonetic}
-                    onChange={(e) => setAdminPhonetic(e.target.value)}
-                  />
-                  <span className="form-hint">The unconventional phonetic spelling to display</span>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="sounds">How It Sounds (with hyphens)</label>
-                  <input
-                    type="text"
-                    id="sounds"
-                    placeholder="e.g., f-i-sh"
-                    maxLength={100}
-                    value={adminSounds}
-                    onChange={(e) => handleSoundsChange(e.target.value)}
-                  />
-                  <span className="form-hint">Separate each sound with a hyphen (e.g., "f-i-sh", "n-ay-sh-un")</span>
-                </div>
-
-                {/* Pattern Suggestions */}
-                {isLoadingPatterns && (
-                  <div className="pattern-loading">Finding matching patterns...</div>
-                )}
-                
-                {suggestedPatterns.length > 0 && (
-                  <div className="pattern-suggestions">
-                    <h3>Suggested Phonetic Patterns:</h3>
-                    {suggestedPatterns.map((sound, soundIndex) => (
-                      <div key={soundIndex} className="sound-group">
-                        <h4>Sound: "{sound.sound}"</h4>
-                        <div className="pattern-options">
-                          <label className="pattern-option no-change-option">
-                            <input
-                              type="checkbox"
-                              checked={noChangeSoundIndexes.includes(soundIndex)}
-                              onChange={() => toggleNoChangeForSound(
-                                soundIndex,
-                                sound.patterns.map((pattern: any) => pattern.id)
-                              )}
-                            />
-                            <span className="pattern-letters">✓</span>
-                            <span className="pattern-sound">Keep as-is</span>
-                            <span className="pattern-reference">(no replacement for this sound)</span>
-                          </label>
-
-                          {sound.patterns.length > 0 ? (
-                            sound.patterns.map((pattern: any) => (
-                              <label key={pattern.id} className="pattern-option">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedPatterns.includes(pattern.id)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setSelectedPatterns([...selectedPatterns, pattern.id]);
-                                      setNoChangeSoundIndexes(
-                                        noChangeSoundIndexes.filter(index => index !== soundIndex)
-                                      );
-                                    } else {
-                                      setSelectedPatterns(selectedPatterns.filter(id => id !== pattern.id));
-                                    }
-                                  }}
-                                />
-                                <span className="pattern-letters">{pattern.letters}</span>
-                                <span className="pattern-arrow">→</span>
-                                <span className="pattern-sound">{pattern.sound}</span>
-                                <span className="pattern-reference">(from "{pattern.reference}")</span>
-                              </label>
-                            ))
-                          ) : (
-                            <p className="no-patterns">No patterns found for "{sound.sound}". You may need to add this pattern first.</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <button type="submit" className="submit-button">
-                  Add Word
-                </button>
-              </form>
-              )}
-
-              {/* Pattern Form */}
-              {adminMode === 'pattern' && (
-                <form className="admin-form" onSubmit={handlePatternSubmit}>
-                  <div className="form-group">
-                    <label htmlFor="pattern-letters">Letter Combination</label>
-                    <input
-                      type="text"
-                      id="pattern-letters"
-                      placeholder="e.g., ti, gh, ph"
-                      maxLength={10}
-                      value={patternLetters}
-                      onChange={(e) => setPatternLetters(e.target.value)}
-                    />
-                    <span className="form-hint">The letters that make the sound (max 10 chars)</span>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="pattern-sound">Sound It Makes</label>
-                    <input
-                      type="text"
-                      id="pattern-sound"
-                      placeholder="e.g., sh, f, i"
-                      maxLength={10}
-                      value={patternSound}
-                      onChange={(e) => setPatternSound(e.target.value)}
-                    />
-                    <span className="form-hint">The phonetic sound produced (max 10 chars)</span>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="pattern-reference">Reference Word</label>
-                    <input
-                      type="text"
-                      id="pattern-reference"
-                      placeholder="e.g., nation, enough, women"
-                      maxLength={50}
-                      value={patternReference}
-                      onChange={(e) => setPatternReference(e.target.value)}
-                    />
-                    <span className="form-hint">An example word where this pattern appears</span>
-                  </div>
-
-                  <div className="pattern-example">
-                    <strong>Example:</strong> In "nation", the letters "ti" make the sound "sh"
-                  </div>
-
-                  <button type="submit" className="submit-button">
-                    Add Pattern
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Password Reset Modal */}
-      {showPasswordReset && (
-        <div className="modal-overlay" onClick={() => setShowPasswordReset(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{resetStep === 'request' ? 'Reset Password' : 'Set New Password'}</h2>
-              <button 
-                className="modal-close" 
-                onClick={() => {
-                  setShowPasswordReset(false);
-                  setResetMessage('');
-                  setResetError('');
-                }}
-              >
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              {resetMessage && <div className="success-message">{resetMessage}</div>}
-              {resetError && <div className="error-message">{resetError}</div>}
-              
-              {resetStep === 'request' ? (
-                <form onSubmit={handlePasswordResetRequest}>
-                  <div className="form-group">
-                    <label htmlFor="reset-email">Email Address</label>
-                    <input
-                      id="reset-email"
-                      type="email"
-                      value={resetEmail}
-                      onChange={(e) => setResetEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      required
-                      autoFocus
-                    />
-                  </div>
-                  <button type="submit" className="submit-button">
-                    Send Reset Link
-                  </button>
-                  <p style={{ fontSize: '14px', marginTop: '10px', color: '#666' }}>
-                    We'll send you a link to reset your password.
-                  </p>
-                </form>
-              ) : (
-                <form onSubmit={handlePasswordResetConfirm}>
-                  <div className="form-group">
-                    <label htmlFor="new-password">New Password</label>
-                    <input
-                      id="new-password"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password"
-                      required
-                      minLength={6}
-                      autoFocus
-                    />
-                  </div>
-                  <button type="submit" className="submit-button">
-                    Reset Password
-                  </button>
-                  <p style={{ fontSize: '14px', marginTop: '10px', color: '#666' }}>
-                    Password must be at least 6 characters long.
-                  </p>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <PasswordResetModal
+        isOpen={showPasswordReset}
+        step={resetStep}
+        resetEmail={resetEmail}
+        newPassword={newPassword}
+        resetMessage={resetMessage}
+        resetError={resetError}
+        onClose={() => {
+          setShowPasswordReset(false);
+          setResetMessage('');
+          setResetError('');
+        }}
+        onEmailChange={(value) => setResetEmail(value)}
+        onNewPasswordChange={(value) => setNewPassword(value)}
+        onRequestSubmit={handlePasswordResetRequest}
+        onConfirmSubmit={handlePasswordResetConfirm}
+      />
 
       <div className="game-content">
         <div className="phonetic-word">

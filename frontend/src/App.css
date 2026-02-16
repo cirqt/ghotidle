@@ -599,13 +599,6 @@
   border-bottom-color: #538d4e;
 }
 
-/* Auth Form */
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 .form-group {
   display: flex;
   flex-direction: column;
@@ -882,29 +875,6 @@
 
 .submit-button:active {
   background-color: #4a7a44;
-}
-
-/* Forgot Password Link */
-.forgot-password-link {
-  background: none;
-  border: none;
-  color: #818384;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 8px 0;
-  margin-top: 8px;
-  text-decoration: underline;
-  transition: color 0.2s;
-  width: 100%;
-  text-align: center;
-}
-
-.forgot-password-link:hover {
-  color: #ffffff;
-}
-
-.forgot-password-link:active {
-  color: #6aaa64;
 }
 
 /* User Menu */

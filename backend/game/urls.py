@@ -14,4 +14,5 @@ urlpatterns = [
     path('words/random/', views.get_random_word, name='random_word'),
     path('phonetic-patterns/', views.create_phonetic_pattern, name='create_pattern'),
     path('phonetic-patterns/suggest/', views.suggest_phonetic_patterns, name='suggest_patterns'),
+    path('leaderboard/', views.get_leaderboard, name='leaderboard'),
 ]

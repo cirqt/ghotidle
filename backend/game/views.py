@@ -416,7 +416,7 @@ def create_word(request):
 @api_view(['GET'])
 def get_random_word(request):
     """
-    Get a random valid word from the database
+    Get a random word from the ValidWord database for testing.
     """
     try:
         word = ValidWord.objects.order_by('?').first()
@@ -431,3 +431,47 @@ def get_random_word(request):
         return Response({
             'error': f'Failed to get random word: {str(e)}'
         }, status=500)
+
+
+@api_view(['GET'])
+def get_leaderboard(request):
+    """
+    Get top 5 players + current user's rank
+    Sorted by: 1) most wins, 2) least losses, 3) oldest account
+    """
+    from .models import UserStats
+    from django.db.models import F
+    
+    # get all users sorted by ranking logic
+    all_users = UserStats.objects.select_related('user').order_by(
+        '-correctGuesses',  # most wins first
+        'wrongGuesses',     # least losses (tiebreaker)
+        'user__date_joined' # oldest account (hidden tiebreaker)
+    )
+    
+    # build ranked list w/ positions
+    ranked = []
+    for idx, stat in enumerate(all_users, start=1):
+        ranked.append({
+            'rank': idx,
+            'username': stat.user.username,
+            'correct': stat.correctGuesses,
+            'wrong': stat.wrongGuesses,
+            'streak': stat.streak
+        })
+    
+    # top 5
+    top_5 = ranked[:5]
+    
+    # find current user
+    current_user_data = None
+    if request.user.is_authenticated:
+        for entry in ranked:
+            if entry['username'] == request.user.username:
+                current_user_data = entry
+                break
+    
+    return Response({
+        'top_5': top_5,
+        'current_user': current_user_data
+    })

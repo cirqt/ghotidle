@@ -5,10 +5,11 @@ interface MenuBarProps {
   onShowInfo: () => void;
   onShowAdmin: () => void;
   onShowAuth: () => void;
+  onShowLeaderboard: () => void;
   onLogout: () => void;
 }
 
-function MenuBar({ user, onShowInfo, onShowAdmin, onShowAuth, onLogout }: MenuBarProps) {
+function MenuBar({ user, onShowInfo, onShowAdmin, onShowAuth, onShowLeaderboard, onLogout }: MenuBarProps) {
   return (
     <header className="menu-bar">
       <div className="menu-left">
@@ -23,6 +24,13 @@ function MenuBar({ user, onShowInfo, onShowAdmin, onShowAuth, onLogout }: MenuBa
             ⚙️ Admin
           </button>
         )}
+        <button className="leaderboard-icon-button" onClick={onShowLeaderboard} aria-label="Leaderboard">
+          <svg className="leaderboard-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="14" width="5" height="7" />
+            <rect x="9.5" y="8" width="5" height="13" />
+            <rect x="16" y="11" width="5" height="10" />
+          </svg>
+        </button>
         {user ? (
           <div className="user-menu">
             <span className="username">{user.username}</span>

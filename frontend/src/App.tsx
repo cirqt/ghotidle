@@ -4,6 +4,7 @@ import AdminModal from './components/AdminModal';
 import AuthModal from './components/AuthModal';
 import GameOverModal from './components/GameOverModal';
 import InfoModal from './components/InfoModal';
+import LeaderboardModal from './components/LeaderboardModal';
 import MenuBar from './components/MenuBar';
 import PasswordResetModal from './components/PasswordResetModal';
 import Keyboard from './components/Keyboard';
@@ -32,6 +33,7 @@ function App() {
   const [showInfo, setShowInfo] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [user, setUser] = useState<{username: string, email: string, is_superuser: boolean} | null>(null);
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
@@ -598,10 +600,17 @@ function App() {
         onShowInfo={() => setShowInfo(true)}
         onShowAdmin={() => setShowAdmin(true)}
         onShowAuth={() => setShowAuth(true)}
+        onShowLeaderboard={() => setShowLeaderboard(true)}
         onLogout={handleLogout}
       />
 
       <InfoModal isOpen={showInfo} onClose={() => setShowInfo(false)} />
+
+      <LeaderboardModal 
+        isOpen={showLeaderboard} 
+        onClose={() => setShowLeaderboard(false)} 
+        user={user}
+      />
 
       <GameOverModal
         isOpen={gameLost}

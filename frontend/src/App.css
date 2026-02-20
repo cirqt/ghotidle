@@ -1110,6 +1110,40 @@
   color: #d7dadc;
 }
 
+.leaderboard-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #818384;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.leaderboard-header .rank-header {
+  min-width: 40px;
+}
+
+.leaderboard-header .username-header {
+  flex: 1;
+}
+
+.leaderboard-header .stats-header {
+  display: flex;
+  gap: 12px;
+}
+
+.leaderboard-header .wins-header,
+.leaderboard-header .losses-header,
+.leaderboard-header .streak-header {
+  cursor: help;
+  min-width: 30px;
+  text-align: center;
+}
+
 .empty-message {
   text-align: center;
   color: #818384;
@@ -1159,6 +1193,13 @@
   display: flex;
   gap: 12px;
   font-size: 0.9rem;
+}
+
+.leaderboard-entry .wins,
+.leaderboard-entry .losses,
+.leaderboard-entry .streak {
+  min-width: 30px;
+  text-align: center;
 }
 
 .leaderboard-entry .wins {

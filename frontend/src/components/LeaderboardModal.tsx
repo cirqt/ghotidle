@@ -94,22 +94,33 @@ function LeaderboardModal({ isOpen, onClose, user }: LeaderboardModalProps) {
                 {data.top_5.length === 0 ? (
                   <p className="empty-message">No players yet. Be the first!</p>
                 ) : (
-                  <div className="leaderboard-list">
-                    {data.top_5.map((entry) => (
-                      <div 
-                        key={entry.rank} 
-                        className={`leaderboard-entry ${entry.username === user?.username ? 'current-user' : ''}`}
-                      >
-                        <div className="rank">#{entry.rank}</div>
-                        <div className="username">{entry.username}</div>
-                        <div className="stats">
-                          <span className="wins">{entry.correct}W</span>
-                          <span className="losses">{entry.wrong}L</span>
-                          <span className="streak">🔥{entry.streak}</span>
-                        </div>
+                  <>
+                    <div className="leaderboard-header">
+                      <div className="rank-header">#</div>
+                      <div className="username-header">Player</div>
+                      <div className="stats-header">
+                        <span className="wins-header" title="Correct guesses">W</span>
+                        <span className="losses-header" title="Wrong guesses">L</span>
+                        <span className="streak-header" title="Daily streak">🔥</span>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                    <div className="leaderboard-list">
+                      {data.top_5.map((entry) => (
+                        <div 
+                          key={entry.rank} 
+                          className={`leaderboard-entry ${entry.username === user?.username ? 'current-user' : ''}`}
+                        >
+                          <div className="rank">#{entry.rank}</div>
+                          <div className="username">{entry.username}</div>
+                          <div className="stats">
+                            <span className="wins">{entry.correct}</span>
+                            <span className="losses">{entry.wrong}</span>
+                            <span className="streak">{entry.streak}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
 
@@ -121,9 +132,9 @@ function LeaderboardModal({ isOpen, onClose, user }: LeaderboardModalProps) {
                     <div className="rank">#{data.current_user.rank}</div>
                     <div className="username">{data.current_user.username}</div>
                     <div className="stats">
-                      <span className="wins">{data.current_user.correct}W</span>
-                      <span className="losses">{data.current_user.wrong}L</span>
-                      <span className="streak">🔥{data.current_user.streak}</span>
+                      <span className="wins">{data.current_user.correct}</span>
+                      <span className="losses">{data.current_user.wrong}</span>
+                      <span className="streak">{data.current_user.streak}</span>
                     </div>
                   </div>
                 </div>

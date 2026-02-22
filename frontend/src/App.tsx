@@ -5,6 +5,7 @@ import AuthModal from './components/AuthModal';
 import GameOverModal from './components/GameOverModal';
 import InfoModal from './components/InfoModal';
 import LeaderboardModal from './components/LeaderboardModal';
+import UserModal from './components/UserModal';
 import MenuBar from './components/MenuBar';
 import PasswordResetModal from './components/PasswordResetModal';
 import Keyboard from './components/Keyboard';
@@ -34,7 +35,9 @@ function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [shareMessage, setShareMessage] = useState('');
   const [user, setUser] = useState<{username: string, email: string, is_superuser: boolean} | null>(null);
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
   const [targetWord, setTargetWord] = useState(''); // The actual answer
@@ -70,6 +73,36 @@ function App() {
   const API_BASE_URL = 'http://localhost:8000/api';
   const MAX_WORD_LENGTH = 7;
   const MAX_ATTEMPTS = 5;
+
+  // Generate share text with emoji grid
+  const generateShareText = (): string => {
+    const attemptNumber = guesses.length;
+    const emojiGrid = guesses
+      .map((result) =>
+        result.feedback
+          .map((fb) => {
+            if (fb.status === 'correct') return '🟩';
+            if (fb.status === 'present') return '🟨';
+            return '⬜';
+          })
+          .join('')
+      )
+      .join('\n');
+
+    return `Ghotidle ${attemptNumber}/${MAX_ATTEMPTS}\n\n${emojiGrid}`;
+  };
+
+  // Handle share button click
+  const handleShare = async () => {
+    try {
+      const shareText = generateShareText();
+      await navigator.clipboard.writeText(shareText);
+      setShareMessage('Copied to clipboard!');
+    } catch (err) {
+      setShareMessage('Failed to copy');
+      console.error('Failed to copy:', err);
+    }
+  };
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -107,7 +140,7 @@ function App() {
 
   // Auto-hide toast after 3 seconds
   useEffect(() => {
-    if (error) {
+    if (error || shareMessage) {
       // Small delay to ensure initial render happens before animation starts
       const showTimer = setTimeout(() => {
         setShowToast(true);
@@ -124,17 +157,18 @@ function App() {
     } else {
       setShowToast(false);
     }
-  }, [error]);
+  }, [error, shareMessage]);
 
-  // Clear error message after slide-out animation completes
+  // Clear error/share message after slide-out animation completes
   useEffect(() => {
-    if (!showToast && error) {
+    if (!showToast && (error || shareMessage)) {
       const timer = setTimeout(() => {
         setError('');
+        setShareMessage('');
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [showToast, error]);
+  }, [showToast, error, shareMessage]);
 
   // Fetch the daily word on component mount
   useEffect(() => {
@@ -601,10 +635,17 @@ function App() {
         onShowAdmin={() => setShowAdmin(true)}
         onShowAuth={() => setShowAuth(true)}
         onShowLeaderboard={() => setShowLeaderboard(true)}
+        onShowUserProfile={() => setShowUserProfile(true)}
         onLogout={handleLogout}
       />
 
       <InfoModal isOpen={showInfo} onClose={() => setShowInfo(false)} />
+
+      <UserModal
+        isOpen={showUserProfile}
+        onClose={() => setShowUserProfile(false)}
+        user={user}
+      />
 
       <LeaderboardModal 
         isOpen={showLeaderboard} 
@@ -621,6 +662,7 @@ function App() {
         targetWord={targetWord}
         phoneticWord={phoneticWord}
         phoneticPatterns={phoneticPatterns}
+        onShare={handleShare}
       />
 
       <GameOverModal
@@ -632,6 +674,7 @@ function App() {
         targetWord={targetWord}
         phoneticWord={phoneticWord}
         phoneticPatterns={phoneticPatterns}
+        onShare={handleShare}
       />
 
       <AuthModal
@@ -774,9 +817,9 @@ function App() {
       </div>
 
       {/* Toast notification */}
-      {error && (
-        <div className={`toast ${showToast ? 'show' : ''}`}>
-          {error}
+      {(error || shareMessage) && (
+        <div className={`toast ${showToast ? 'show' : ''} ${shareMessage ? 'success' : ''}`}>
+          {error || shareMessage}
         </div>
       )}
       </div>

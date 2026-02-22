@@ -6,10 +6,11 @@ interface MenuBarProps {
   onShowAdmin: () => void;
   onShowAuth: () => void;
   onShowLeaderboard: () => void;
+  onShowUserProfile: () => void;
   onLogout: () => void;
 }
 
-function MenuBar({ user, onShowInfo, onShowAdmin, onShowAuth, onShowLeaderboard, onLogout }: MenuBarProps) {
+function MenuBar({ user, onShowInfo, onShowAdmin, onShowAuth, onShowLeaderboard, onShowUserProfile, onLogout }: MenuBarProps) {
   return (
     <header className="menu-bar">
       <div className="menu-left">
@@ -33,9 +34,18 @@ function MenuBar({ user, onShowInfo, onShowAdmin, onShowAuth, onShowLeaderboard,
         </button>
         {user ? (
           <div className="user-menu">
-            <span className="username">{user.username}</span>
-            <button className="logout-button" onClick={onLogout}>
-              Logout
+            <button className="user-profile-button" onClick={onShowUserProfile} aria-label="View profile">
+              <svg className="user-profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+              </svg>
+            </button>
+            <button className="logout-button" onClick={onLogout} aria-label="Logout">
+              <svg className="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
             </button>
           </div>
         ) : (

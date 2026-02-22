@@ -478,6 +478,30 @@
   font-size: 14px;
   color: rgba(255, 255, 255, 0.8);
   font-weight: 600;
+}
+
+/* Share Button */
+.share-button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px 24px;
+  background-color: #538d4e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.share-button:hover {
+  background-color: #6aaa64;
+  transform: translateY(-1px);
+}
+
+.share-button:active {
+  transform: translateY(0);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -589,6 +613,10 @@
 
 .toast.show {
   bottom: 80px;
+}
+
+.toast.success {
+  background-color: #538d4e;
 }
 
 /* Auth Tabs */
@@ -914,18 +942,46 @@
 
 .logout-button {
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.8);
-  padding: 6px 12px;
-  border-radius: 6px;
+  border: none;
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background-color 0.2s;
 }
 
 .logout-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.logout-icon {
+  width: 24px;
+  height: 24px;
+  color: #ffffff;
+}
+
+/* User Profile Button */
+.user-profile-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.user-profile-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-profile-icon {
+  width: 24px;
+  height: 24px;
   color: #ffffff;
 }
 
@@ -1061,6 +1117,162 @@
 
 .modal-button:active {
   transform: translateY(0);
+}
+
+/* User Profile Modal */
+.user-modal {
+  max-width: 500px;
+}
+
+.account-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #3a3a3c;
+}
+
+.account-section:last-child {
+  border-bottom: none;
+}
+
+.account-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  color: #d7dadc;
+  font-weight: 600;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+.account-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #818384;
+}
+
+.info-value {
+  color: #d7dadc;
+}
+
+.edit-button {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.edit-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-input {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #d7dadc;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.settings-input::placeholder {
+  color: #818384;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.save-button {
+  flex: 1;
+  background-color: #538d4e;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.save-button:hover:not(:disabled) {
+  background-color: #6aaa64;
+}
+
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  flex: 1;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+}
+
+.success-text {
+  color: #6aaa64;
+  font-size: 14px;
+  text-align: center;
+  margin: 0;
+}
+
+.error-text {
+  color: #f87171;
+  font-size: 14px;
+  text-align: center;
+  margin: 0;
 }
 
 /* Leaderboard Modal */

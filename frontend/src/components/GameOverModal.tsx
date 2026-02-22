@@ -15,6 +15,7 @@ interface GameOverModalProps {
   targetWord: string;
   phoneticWord: string;
   phoneticPatterns: PhoneticPattern[];
+  onShare: () => void;
 }
 
 function GameOverModal({
@@ -26,6 +27,7 @@ function GameOverModal({
   targetWord,
   phoneticWord,
   phoneticPatterns,
+  onShare,
 }: GameOverModalProps) {
   if (!isOpen) return null;
 
@@ -60,6 +62,10 @@ function GameOverModal({
               ))}
             </div>
           )}
+
+          <button className="share-button" onClick={onShare}>
+            📋 Share Results
+          </button>
         </div>
       </div>
     </div>

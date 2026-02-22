@@ -219,6 +219,59 @@ def reset_password(request):
 
 @api_view(['POST'])
 @csrf_exempt
+def change_email(request):
+    """Change user's email address"""
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication required'}, status=401)
+    
+    new_email = request.data.get('new_email', '').strip().lower()
+    
+    if not new_email:
+        return Response({'error': 'New email is required'}, status=400)
+    
+    if '@' not in new_email:
+        return Response({'error': 'Invalid email address'}, status=400)
+    
+    # Check if email already exists
+    if User.objects.filter(email=new_email).exclude(pk=request.user.pk).exists():
+        return Response({'error': 'This email is already in use'}, status=400)
+    
+    # Update email
+    request.user.email = new_email
+    request.user.save()
+    
+    return Response({'message': 'Email updated successfully', 'email': new_email})
+
+
+@api_view(['POST'])
+@csrf_exempt
+def change_password(request):
+    """Change user's password"""
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication required'}, status=401)
+    
+    current_password = request.data.get('current_password', '')
+    new_password = request.data.get('new_password', '')
+    
+    if not current_password or not new_password:
+        return Response({'error': 'Current password and new password are required'}, status=400)
+    
+    # Verify current password
+    if not request.user.check_password(current_password):
+        return Response({'error': 'Current password is incorrect'}, status=400)
+    
+    if len(new_password) < 6:
+        return Response({'error': 'Password must be at least 6 characters'}, status=400)
+    
+    # Set new password
+    request.user.set_password(new_password)
+    request.user.save()
+    
+    return Response({'message': 'Password updated successfully'})
+
+
+@api_view(['POST'])
+@csrf_exempt
 def suggest_phonetic_patterns(request):
     """Suggest phonetic patterns based on sound breakdown"""
     from .models import PhoneticPattern

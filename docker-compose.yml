@@ -1,23 +1,51 @@
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=ghodb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 services:
+    db:
+      image: postgres:16
+      environment:
+        POSTGRES_DB: ghodb
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: admin
+      ports:
+        - "5432:5432"
+      volumes:
+        - pgdata:/var/lib/postgresql/data
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     working_dir: /app/backend
-    command: .venv/bin/python manage.py runserver 0.0.0.0:8000
+    command: .venv/bin/python manage.py migrate && .venv/bin/python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app/backend
+      - ./backend/game:/app/backend/game
+      - ./backend/manage.py:/app/backend/manage.py
     environment:
-      - DJANGO_SETTINGS_MODULE=ghotidle_backend.settings
+      DJANGO_SETTINGS_MODULE: ghotidle_backend.settings
+      DB_NAME: ghodb
+      DB_USER: postgres
+      DB_PASSWORD: admin
+      DB_HOST: db
+      DB_PORT: 5432
+  volumes:
+    pgdata:
   frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
     working_dir: /app/frontend
     command: npm start
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app/frontend
+      - ./frontend/src:/app/frontend/src

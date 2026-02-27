@@ -15,7 +15,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     working_dir: /app/backend
-    command: /bin/sh -c ".venv/bin/python manage.py migrate && .venv/bin/python manage.py runserver 0.0.0.0:8000"
+    command: /bin/sh -c ".venv/bin/python manage.py migrate && .venv/bin/python data/load_valid_words.py && .venv/bin/python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     volumes:

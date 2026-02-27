@@ -1,30 +1,21 @@
+version: '3.9'
+services:
   db:
     image: postgres:16
     environment:
-      - POSTGRES_DB=ghodb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=admin
+      POSTGRES_DB: ghodb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-services:
-    db:
-      image: postgres:16
-      environment:
-        POSTGRES_DB: ghodb
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: admin
-      ports:
-        - "5432:5432"
-      volumes:
-        - pgdata:/var/lib/postgresql/data
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     working_dir: /app/backend
-    command: .venv/bin/python manage.py migrate && .venv/bin/python manage.py runserver 0.0.0.0:8000
+    command: /bin/sh -c ".venv/bin/python manage.py migrate && .venv/bin/python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     volumes:
@@ -37,8 +28,8 @@ services:
       DB_PASSWORD: admin
       DB_HOST: db
       DB_PORT: 5432
-  volumes:
-    pgdata:
+    depends_on:
+      - db
   frontend:
     build:
       context: ./frontend
@@ -49,3 +40,5 @@ services:
       - "3000:3000"
     volumes:
       - ./frontend/src:/app/frontend/src
+volumes:
+  pgdata:

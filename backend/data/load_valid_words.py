@@ -6,14 +6,13 @@ import psycopg2
 from psycopg2.extras import execute_batch
 import os
 
-# Database connection parameters
-# Update these with your actual database credentials
+# Database connection parameters - read from environment variables with local defaults
 DB_CONFIG = {
-    'dbname': 'ghodb',      # Your database name
-    'user': 'postgres',     # Your PostgreSQL username
-    'password': 'admin', # Your PostgreSQL password
-    'host': 'localhost',
-    'port': '5432'
+    'dbname': os.environ.get('DB_NAME', 'ghodb'),
+    'user': os.environ.get('DB_USER', 'postgres'),
+    'password': os.environ.get('DB_PASSWORD', 'admin'),
+    'host': os.environ.get('DB_HOST', 'localhost'),
+    'port': os.environ.get('DB_PORT', '5432'),
 }
 
 def load_words_to_db():

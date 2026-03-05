@@ -40,11 +40,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    working_dir: /app/frontend
     command: npm start
+    environment:
+      - "CHOKIDAR_USEPOLLING=true"
+      - "WATCHPACK_POLLING=true"
     ports:
       - "3000:3000"
     volumes:
       - ./frontend/src:/app/frontend/src
+      # - ./frontend:/srv
 volumes:
   pgdata:

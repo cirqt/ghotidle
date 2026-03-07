@@ -1,3 +1,4 @@
+import os
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -169,7 +170,8 @@ def request_password_reset(request):
         token = default_token_generator.make_token(user)
         
         # In production, send this as a link to frontend
-        reset_link = f"http://localhost:3000/reset-password?token={token}&uid={user.pk}"
+        frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+        reset_link = f"{frontend_url}/reset-password?token={token}&uid={user.pk}"
         
         # Send email
         send_mail(

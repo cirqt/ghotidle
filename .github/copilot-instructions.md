@@ -109,7 +109,7 @@ Both servers must run simultaneously for the game to work.
 - No separate `Board` component - grid rendered inline in `App.tsx`
 - Modal "How to Play" dialog with color-coded example
 
-**API integration**: Hardcoded `API_BASE_URL = 'http://localhost:8000/api'` in `App.tsx`
+**API integration**: `API_BASE_URL` reads from `REACT_APP_API_URL` env var, defaulting to `http://localhost:8000/api` for local dev. Set in `frontend/.env`. `UserModal` and `LeaderboardModal` also use the same env var.
 
 **Missing files** (referenced in other branches but don't exist here):
 - `frontend/src/api.ts` - No centralized API client
@@ -199,14 +199,14 @@ python backend/data/load_valid_words.py
 - **FIFO Word Queue**: Word creation automatically assigns next available date (latest word's date + 1 day). First word starts with today's date.
 
 ### CORS Configuration
-`settings.py` explicitly allows `localhost:3000` and `127.0.0.1:3000`. When adding new frontend URLs or deployment, update `CORS_ALLOWED_ORIGINS`.
+`settings.py` reads `CORS_ALLOWED_ORIGINS` from the env var of the same name (comma-separated). Defaults to `http://localhost:3000,http://127.0.0.1:3000` for local dev. For production, set the env var to include the production domain. `CSRF_TRUSTED_ORIGINS` is set to the same value automatically.
 
 ## Common Pitfalls
 
 1. **Virtual environment**: Always activate `.\venv\Scripts\Activate.ps1` before backend work (PowerShell syntax)
 2. **CORS errors**: Ensure backend is running and `corsheaders` middleware is active in `settings.py`
 3. **Migration conflicts**: Run `makemigrations` after model changes (currently models are empty)
-4. **Port conflicts**: Backend must be on 8000, frontend on 3000 (hardcoded in `App.tsx`)
+4. **Port conflicts**: Backend on 8000, frontend on 3000 by default. Change via `REACT_APP_API_URL` (frontend) and `FRONTEND_URL` (backend) env vars.
 5. **Both servers required**: Game won't work unless both Django and React dev servers are running
 
 ## Next Steps for Implementation
@@ -282,18 +282,13 @@ Create PostgreSQL database (using psql or pgAdmin):
 CREATE DATABASE ghodb;
 ```
 
-Update credentials in `backend/ghotidle_backend/settings.py` if needed:
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ghodb',
-        'USER': 'postgres',
-        'PASSWORD': 'admin',  # Change to match your PostgreSQL password
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+Update credentials in `backend/.env` if needed (all DB settings read from env vars):
+```
+DB_NAME=ghodb
+DB_USER=postgres
+DB_PASSWORD=admin
+DB_HOST=localhost
+DB_PORT=5432
 ```
 
 **3. Backend Setup**
@@ -389,26 +384,41 @@ python manage.py loaddata fixtures/game_data.json
 - Reload valid words with `python data/load_valid_words.py`
 - Add new puzzle words through admin interface
 
+### Environment Variables Reference
+
+#### Backend (`backend/.env`)
+| Variable | Default | Description |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | fallback-dev-key | Django secret key — **must be set in production** |
+| `DJANGO_DEBUG` | `True` | Set to `False` in production |
+| `ALLOWED_HOSTS` | `localhost,127.0.0.1` | Comma-separated list of allowed hostnames |
+| `DB_NAME` | `ghodb` | PostgreSQL database name |
+| `DB_USER` | `postgres` | PostgreSQL username |
+| `DB_PASSWORD` | `admin` | PostgreSQL password |
+| `DB_HOST` | `localhost` | PostgreSQL host (use `db` inside Docker) |
+| `DB_PORT` | `5432` | PostgreSQL port |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,...` | Comma-separated allowed frontend origins |
+| `FRONTEND_URL` | `http://localhost:3000` | Used in password reset email links |
+
+#### Frontend (`frontend/.env`)
+| Variable | Default | Description |
+|---|---|---|
+| `REACT_APP_API_URL` | `http://localhost:8000/api` | Backend API base URL |
+
 ### Important Notes
 
 1. **Password Security**: Django uses PBKDF2-SHA256 hashing. Passwords are salted and cannot be reverse-engineered from the database.
 
-2. **SECRET_KEY Updated**: The Django SECRET_KEY was regenerated on **February 5, 2026** and stored in `backend/.env`. If setting up on another workstation, you'll need to either:
-   - Copy the `.env` file from this workstation (not in git)
+2. **SECRET_KEY**: Stored in `backend/.env` (not in git). If setting up on another workstation:
+   - Copy the `.env` file, or
    - Generate a new key: `python -c "import secrets; print(secrets.token_urlsafe(50))"`
-   - Update `backend/.env` with: `DJANGO_SECRET_KEY=<your-new-key>`
+   - Add to `backend/.env`: `DJANGO_SECRET_KEY=<your-new-key>`
 
-3. **Sessions Don't Transfer**: Login sessions are tied to the server's SECRET_KEY. Users must log in again on a new workstation unless you:
-   - Keep the same SECRET_KEY in settings.py
-   - Import the django_session table data
+3. **Sessions Don't Transfer**: Login sessions are tied to the server's SECRET_KEY. Users must log in again on a new workstation unless you keep the same SECRET_KEY or import the `django_session` table.
 
-3. **Valid Words Reload**: The `validWord` table (97k words) should be reloaded on new workstations using `backend/data/load_valid_words.py`.
+4. **Valid Words Reload**: The `validWord` table (97k words) should be reloaded on new workstations using `backend/data/load_valid_words.py`.
 
-4. **PostgreSQL Credentials**: Update `backend/ghotidle_backend/settings.py` to match your local PostgreSQL username/password.
-
-5. **CORS Settings**: Already configured for localhost:3000 and 127.0.0.1:3000. Update `CORS_ALLOWED_ORIGINS` in settings.py for production domains.
-
-6. **No SQLite Used**: Project uses PostgreSQL exclusively. The `db.sqlite3` file in backend (if present) is unused and can be ignored/deleted.
+5. **No SQLite Used**: Project uses PostgreSQL exclusively. The `db.sqlite3` file in backend (if present) is unused.
 
 ### Troubleshooting New Workstation Setup
 

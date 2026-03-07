@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
 interface UserStats {
   correct: number;
   wrong: number;
@@ -42,7 +44,7 @@ function UserModal({ isOpen, onClose, user }: UserModalProps) {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch('http://localhost:8000/api/leaderboard/', {
+        const response = await fetch(`${API_BASE_URL}/leaderboard/`, {
           credentials: 'include',
         });
         if (response.ok) {
@@ -86,7 +88,7 @@ function UserModal({ isOpen, onClose, user }: UserModalProps) {
     setEmailMessage('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/change-email/', {
+      const response = await fetch(`${API_BASE_URL}/auth/change-email/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -131,7 +133,7 @@ function UserModal({ isOpen, onClose, user }: UserModalProps) {
     setPasswordMessage('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/change-password/', {
+      const response = await fetch(`${API_BASE_URL}/auth/change-password/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

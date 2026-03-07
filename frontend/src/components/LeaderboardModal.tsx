@@ -81,8 +81,20 @@ function LeaderboardModal({ isOpen, onClose, user }: LeaderboardModalProps) {
                       <div className="stat-label">Wins</div>
                     </div>
                     <div className="stat-item">
+                      <div className="stat-value">{data.current_user.wrong}</div>
+                      <div className="stat-label">Losses</div>
+                    </div>
+                    <div className="stat-item">
                       <div className="stat-value">{data.current_user.streak}</div>
                       <div className="stat-label">Streak</div>
+                    </div>
+                    <div className="stat-item">
+                      <div className="stat-value">
+                        {data.current_user.correct + data.current_user.wrong > 0
+                          ? Math.round((data.current_user.correct / (data.current_user.correct + data.current_user.wrong)) * 100)
+                          : 0}%
+                      </div>
+                      <div className="stat-label">Win Rate</div>
                     </div>
                   </div>
                 </div>

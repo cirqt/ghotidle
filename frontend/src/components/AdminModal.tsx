@@ -1,4 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
+interface ScheduledWord {
+  id: number;
+  secret: string;
+  phonetic: string;
+  date: string;
+  is_past: boolean;
+  is_today: boolean;
+}
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -61,6 +72,36 @@ function AdminModal({
   onPatternReferenceChange,
   onPatternSubmit,
 }: AdminModalProps) {
+  const [calendarActive, setCalendarActive] = useState(false);
+  const [calendarWords, setCalendarWords] = useState<ScheduledWord[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarError, setCalendarError] = useState('');
+  const [showPast, setShowPast] = useState(false);
+
+  const fetchCalendar = async () => {
+    setCalendarLoading(true);
+    setCalendarError('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/words/list/`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setCalendarWords(data.words);
+      } else {
+        setCalendarError('Failed to load scheduled words');
+      }
+    } catch {
+      setCalendarError('Network error');
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
+  // Refresh calendar whenever a new word is successfully added
+  useEffect(() => {
+    if (calendarActive) fetchCalendar();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calendarActive, adminSuccess]);
+
   if (!isOpen) return null;
 
   return (
@@ -75,16 +116,22 @@ function AdminModal({
 
         <div className="admin-tabs">
           <button
-            className={`admin-tab ${adminMode === 'word' ? 'active' : ''}`}
-            onClick={() => onSelectMode('word')}
+            className={`admin-tab ${adminMode === 'word' && !calendarActive ? 'active' : ''}`}
+            onClick={() => { onSelectMode('word'); setCalendarActive(false); }}
           >
             Add Word
           </button>
           <button
-            className={`admin-tab ${adminMode === 'pattern' ? 'active' : ''}`}
-            onClick={() => onSelectMode('pattern')}
+            className={`admin-tab ${adminMode === 'pattern' && !calendarActive ? 'active' : ''}`}
+            onClick={() => { onSelectMode('pattern'); setCalendarActive(false); }}
           >
             Add Pattern
+          </button>
+          <button
+            className={`admin-tab ${calendarActive ? 'active' : ''}`}
+            onClick={() => setCalendarActive(true)}
+          >
+            📅 Calendar
           </button>
         </div>
 
@@ -92,7 +139,66 @@ function AdminModal({
           {adminError && <div className="error-message">{adminError}</div>}
           {adminSuccess && <div className="success-message">{adminSuccess}</div>}
 
-          {adminMode === 'word' && (
+          {calendarActive && (
+            <div className="calendar-section">
+              {calendarLoading && <p>Loading...</p>}
+              {calendarError && <p className="error-text">{calendarError}</p>}
+              {!calendarLoading && !calendarError && (
+                <>
+                  <div className="calendar-toolbar">
+                    <p className="calendar-summary">
+                      <strong>{calendarWords.filter(w => !w.is_past).length}</strong> words scheduled
+                      {calendarWords.length > 0 && (
+                        <> — next available date: <strong>
+                          {(() => {
+                            const last = calendarWords[calendarWords.length - 1];
+                            if (!last) return '—';
+                            const d = new Date(last.date);
+                            d.setDate(d.getDate() + 1);
+                            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                          })()}
+                        </strong></>
+                      )}
+                    </p>
+                    <label className="calendar-toggle">
+                      <input
+                        type="checkbox"
+                        checked={showPast}
+                        onChange={e => setShowPast(e.target.checked)}
+                      />
+                      Show past words
+                    </label>
+                  </div>
+                  {calendarWords.length === 0 ? (
+                    <p className="empty-message">No words scheduled yet.</p>
+                  ) : (
+                    <div className="calendar-list">
+                      {calendarWords.filter(w => showPast || !w.is_past).map(w => (
+                        <div
+                          key={w.id}
+                          className={`calendar-entry ${
+                            w.is_today ? 'calendar-today' : w.is_past ? 'calendar-past' : ''
+                          }`}
+                        >
+                          <span className="calendar-date">
+                            {new Date(w.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                            {w.is_today && <span className="calendar-badge">TODAY</span>}
+                          </span>
+                          <span className="calendar-word">
+                            <strong>{w.phonetic.toUpperCase()}</strong>
+                            <span className="calendar-arrow">→</span>
+                            {w.secret}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {!calendarActive && adminMode === 'word' && (
             <form className="admin-form" onSubmit={onAdminSubmit}>
               <div className="form-group">
                 <label htmlFor="secret">Standard Spelling</label>
@@ -222,7 +328,7 @@ function AdminModal({
             </form>
           )}
 
-          {adminMode === 'pattern' && (
+          {!calendarActive && adminMode === 'pattern' && (
             <form className="admin-form" onSubmit={onPatternSubmit}>
               <div className="form-group">
                 <label htmlFor="pattern-letters">Letter Combination</label>

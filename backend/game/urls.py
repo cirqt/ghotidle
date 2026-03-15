@@ -13,6 +13,7 @@ urlpatterns = [
     path('auth/change-email/', views.change_email, name='change_email'),
     path('auth/change-password/', views.change_password, name='change_password'),
     path('words/', views.create_word, name='create_word'),
+    path('words/list/', views.list_words, name='list_words'),
     path('words/random/', views.get_random_word, name='random_word'),
     path('phonetic-patterns/', views.create_phonetic_pattern, name='create_pattern'),
     path('phonetic-patterns/suggest/', views.suggest_phonetic_patterns, name='suggest_patterns'),

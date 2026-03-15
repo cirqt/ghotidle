@@ -469,6 +469,33 @@ def create_word(request):
 
 
 @api_view(['GET'])
+def list_words(request):
+    """
+    List all scheduled puzzle words ordered by date - admin only.
+    """
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return Response({'error': 'Admin access required'}, status=403)
+
+    from datetime import date as date_type
+    from .models import Word
+    today = date_type.today()
+    words = Word.objects.order_by('date').values('id', 'secret', 'phonetic', 'date')
+    return Response({
+        'words': [
+            {
+                'id': w['id'],
+                'secret': w['secret'],
+                'phonetic': w['phonetic'],
+                'date': w['date'].isoformat(),
+                'is_past': w['date'] < today,
+                'is_today': w['date'] == today,
+            }
+            for w in words
+        ]
+    })
+
+
+@api_view(['GET'])
 def get_random_word(request):
     """
     Get a random word from the ValidWord database for testing.

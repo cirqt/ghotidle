@@ -3,4 +3,4 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "http-server build -p ${PORT:-3000}"
+startCommand = "sh -c 'http-server build -p ${PORT:-3000}'"

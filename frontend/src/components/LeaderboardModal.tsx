@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import API_BASE_URL from '../api';
 
 interface LeaderboardEntry {
   rank: number;
@@ -31,7 +32,7 @@ function LeaderboardModal({ isOpen, onClose, user }: LeaderboardModalProps) {
       setLoading(true);
       setError('');
       try {
-        const response = await fetch('http://localhost:8000/api/leaderboard/', {
+        const response = await fetch(`${API_BASE_URL}/leaderboard/`, {
           credentials: 'include',
         });
         if (response.ok) {

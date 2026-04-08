@@ -70,7 +70,7 @@ function App() {
   const [patternSound, setPatternSound] = useState('');
   const [patternReference, setPatternReference] = useState('');
 
-  const API_BASE_URL = 'http://localhost:8000/api';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
   const MAX_WORD_LENGTH = 7;
   const MAX_ATTEMPTS = 5;
 

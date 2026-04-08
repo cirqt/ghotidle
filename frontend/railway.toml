@@ -3,4 +3,4 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "serve -s build -l ${PORT:-3000}"
+startCommand = "http-server build -p ${PORT:-3000} --proxy http://localhost:${PORT:-3000}?"

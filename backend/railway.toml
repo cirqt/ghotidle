@@ -3,4 +3,4 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "sh -c '.venv/bin/python manage.py migrate && .venv/bin/python manage.py load_sample_data && .venv/bin/python manage.py create_admin && .venv/bin/python manage.py runserver 0.0.0.0:$PORT'"
+startCommand = "sh -c \".venv/bin/python manage.py migrate && .venv/bin/python manage.py load_sample_data && .venv/bin/python manage.py create_admin && .venv/bin/gunicorn ghotidle_backend.wsgi:application --bind 0.0.0.0:$PORT\""

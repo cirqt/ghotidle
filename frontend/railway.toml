@@ -1,3 +1,8 @@
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+builder = "NIXPACKS"
+
+[build.nixpacksPlan.phases.build]
+cmds = ["npm install", "npm run build"]
+
+[deploy]
+startCommand = "node server.js"

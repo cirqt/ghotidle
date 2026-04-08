@@ -11,5 +11,8 @@ COPY . ./
 RUN npm run build
 # Install a simple static file server
 RUN npm install -g http-server
+# Copy startup script
+COPY start.sh ./start.sh
+RUN chmod +x ./start.sh
 EXPOSE 3000
-CMD ["sh", "-c", "http-server build -p ${PORT:-3000}"]
+CMD ["./start.sh"]

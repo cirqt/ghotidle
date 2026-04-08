@@ -1,0 +1,6 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "sh -c '.venv/bin/python manage.py migrate && .venv/bin/python manage.py load_sample_data && .venv/bin/python manage.py runserver 0.0.0.0:$PORT'"

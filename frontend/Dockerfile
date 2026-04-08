@@ -9,10 +9,5 @@ RUN npm install
 COPY . ./
 # Build the React app for production
 RUN npm run build
-# Install a simple static file server
-RUN npm install -g http-server
-# Copy startup script
-COPY start.sh ./start.sh
-RUN apt-get update && apt-get install -y dos2unix && dos2unix ./start.sh && chmod +x ./start.sh
 EXPOSE 3000
-CMD ["./start.sh"]
+CMD ["node", "server.js"]

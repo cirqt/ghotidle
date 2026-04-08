@@ -4,38 +4,71 @@ from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
-from .models import ValidWord  # Import the ValidWord model
+from django.utils import timezone
+from .models import ValidWord, Word, PhoneticPattern
 
 
 @api_view(['GET'])
 def get_word(request):
     """
-    Simple GET endpoint: returns the target word with phonetic components and pattern details
+    GET endpoint: returns today's puzzle word with phonetic components and pattern details.
+    Falls back to 'fish'/'ghoti' if no word is scheduled for today.
     """
-    # Hardcoded for now, will be replaced with database query for daily word system
-    phonetic_patterns = [
-        {'letters': 'gh', 'sound': 'f', 'reference': 'enough'},
-        {'letters': 'o', 'sound': 'i', 'reference': 'women'},
-        {'letters': 'ti', 'sound': 'sh', 'reference': 'nation'},
-    ]
-    
+    today = timezone.now().date()
+
+    # Try to get today's word, then the most recent past word, then fallback
+    word_obj = (
+        Word.objects.filter(date=today).first() or
+        Word.objects.filter(date__lte=today).order_by('-date').first()
+    )
+
+    if word_obj:
+        components = word_obj.phoneticcomponent_set.select_related('pattern').order_by('id')
+        phonetic_patterns = [
+            {
+                'letters': c.pattern.letters,
+                'sound': c.pattern.sound,
+                'reference': c.pattern.reference,
+            }
+            for c in components
+        ]
+        phonetic_spelling = ','.join(c.pattern.letters for c in components)
+
+        return Response({
+            'word': word_obj.secret,
+            'phonetic_spelling': phonetic_spelling or word_obj.phonetic,
+            'length': len(word_obj.secret),
+            'phonetic_patterns': phonetic_patterns,
+        })
+
+    # Hardcoded fallback if no words in database
     return Response({
         'word': 'fish',
-        'phonetic_spelling': 'gh,o,ti',  # Split by phonetic components
+        'phonetic_spelling': 'gh,o,ti',
         'length': 4,
-        'phonetic_patterns': phonetic_patterns
+        'phonetic_patterns': [
+            {'letters': 'gh', 'sound': 'f', 'reference': 'enough'},
+            {'letters': 'o', 'sound': 'i', 'reference': 'women'},
+            {'letters': 'ti', 'sound': 'sh', 'reference': 'nation'},
+        ],
     })
 
 
 @api_view(['POST'])
 def validate_guess(request):
     """
-    Simple validation: compare guess against hardcoded "fish"
-    Returns letter-by-letter feedback
+    Validation: compare guess against today's word from the database.
+    Falls back to 'fish' if no word is scheduled.
     """
-    TARGET_WORD = 'fish'
+    today = timezone.now().date()
+    word_obj = (
+        Word.objects.filter(date=today).first() or
+        Word.objects.filter(date__lte=today).order_by('-date').first()
+    )
+    TARGET_WORD = word_obj.secret if word_obj else 'fish'
+
     guess = request.data.get('guess', '').lower()
-    
+
     # Check if word is valid first
     if not ValidWord.objects.filter(word=guess).exists():
         return Response({

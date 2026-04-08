@@ -12,4 +12,4 @@ RUN npm run build
 # Install a simple static file server
 RUN npm install -g http-server
 EXPOSE 3000
-CMD ["sh", "-c", "http-server build -p ${PORT:-3000} --proxy http://localhost:${PORT:-3000}?"]
+CMD ["sh", "-c", "http-server build -p ${PORT:-3000}"]

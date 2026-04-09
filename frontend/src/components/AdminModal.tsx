@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
+
+interface ScheduleWord {
+  id: number;
+  secret: string;
+  phonetic: string;
+  date: string; // YYYY-MM-DD
+}
 
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
-  adminMode: 'word' | 'pattern';
-  onSelectMode: (mode: 'word' | 'pattern') => void;
+  adminMode: 'word' | 'pattern' | 'schedule';
+  onSelectMode: (mode: 'word' | 'pattern' | 'schedule') => void;
   adminError: string;
   adminSuccess: string;
   adminSecret: string;
@@ -29,6 +36,8 @@ interface AdminModalProps {
   onPatternSoundChange: (value: string) => void;
   onPatternReferenceChange: (value: string) => void;
   onPatternSubmit: (event: React.FormEvent) => void;
+  scheduleWords: ScheduleWord[];
+  onReschedule: (wordId: number, newDate: string) => void;
 }
 
 function AdminModal({
@@ -60,8 +69,44 @@ function AdminModal({
   onPatternSoundChange,
   onPatternReferenceChange,
   onPatternSubmit,
+  scheduleWords,
+  onReschedule,
 }: AdminModalProps) {
   if (!isOpen) return null;
+
+  // Calendar state
+  const today = new Date();
+  const [calendarDate, setCalendarDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [reassignWordId, setReassignWordId] = useState<string>('');
+
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+  const monthName = calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  // Build a map of date -> word for quick lookup
+  const dateMap: Record<string, ScheduleWord> = {};
+  scheduleWords.forEach(w => { dateMap[w.date] = w; });
+
+  // Days in month
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const formatDate = (d: number) => {
+    const mm = String(month + 1).padStart(2, '0');
+    const dd = String(d).padStart(2, '0');
+    return `${year}-${mm}-${dd}`;
+  };
+
+  const todayStr = today.toISOString().split('T')[0];
+  const selectedWord = selectedDay ? dateMap[selectedDay] : null;
+  const unscheduledWords = scheduleWords.filter(w => !w.date || w.date < todayStr);
+
+  const handleReassign = () => {
+    if (!selectedDay || !reassignWordId) return;
+    onReschedule(parseInt(reassignWordId), selectedDay);
+    setReassignWordId('');
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -85,6 +130,12 @@ function AdminModal({
             onClick={() => onSelectMode('pattern')}
           >
             Add Pattern
+          </button>
+          <button
+            className={`admin-tab ${adminMode === 'schedule' ? 'active' : ''}`}
+            onClick={() => onSelectMode('schedule')}
+          >
+            📅 Schedule
           </button>
         </div>
 
@@ -271,6 +322,79 @@ function AdminModal({
                 Add Pattern
               </button>
             </form>
+          )}
+          {adminMode === 'schedule' && (
+            <div className="schedule-container">
+              {/* Month navigation */}
+              <div className="calendar-nav">
+                <button onClick={() => setCalendarDate(new Date(year, month - 1, 1))}>◀</button>
+                <span>{monthName}</span>
+                <button onClick={() => setCalendarDate(new Date(year, month + 1, 1))}>▶</button>
+              </div>
+
+              {/* Weekday headers */}
+              <div className="calendar-grid">
+                {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+                  <div key={d} className="calendar-header-cell">{d}</div>
+                ))}
+
+                {/* Empty cells before first day */}
+                {Array.from({ length: firstDay }).map((_, i) => (
+                  <div key={`empty-${i}`} className="calendar-cell empty" />
+                ))}
+
+                {/* Day cells */}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day = i + 1;
+                  const dateStr = formatDate(day);
+                  const word = dateMap[dateStr];
+                  const isToday = dateStr === todayStr;
+                  const isSelected = dateStr === selectedDay;
+                  return (
+                    <div
+                      key={day}
+                      className={`calendar-cell ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${word ? 'has-word' : ''}`}
+                      onClick={() => setSelectedDay(isSelected ? null : dateStr)}
+                    >
+                      <span className="day-number">{day}</span>
+                      {word && <span className="day-word">{word.secret}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Selected day detail */}
+              {selectedDay && (
+                <div className="calendar-detail">
+                  <h4>{selectedDay}</h4>
+                  {selectedWord ? (
+                    <p>Assigned: <strong>{selectedWord.secret}</strong> ({selectedWord.phonetic})</p>
+                  ) : (
+                    <p>No word assigned for this day.</p>
+                  )}
+                  <div className="reassign-row">
+                    <select
+                      value={reassignWordId}
+                      onChange={e => setReassignWordId(e.target.value)}
+                    >
+                      <option value="">— assign a word —</option>
+                      {scheduleWords.map(w => (
+                        <option key={w.id} value={w.id}>
+                          {w.secret} ({w.phonetic}) — {w.date}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      className="submit-button"
+                      onClick={handleReassign}
+                      disabled={!reassignWordId}
+                    >
+                      Assign
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

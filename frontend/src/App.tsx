@@ -55,7 +55,8 @@ function App() {
   const [resetError, setResetError] = useState('');
   
   // Admin form state
-  const [adminMode, setAdminMode] = useState<'word' | 'pattern'>('word');
+  const [adminMode, setAdminMode] = useState<'word' | 'pattern' | 'schedule'>('word');
+  const [scheduleWords, setScheduleWords] = useState<Array<{id: number, secret: string, phonetic: string, date: string}>>([]);
   const [adminSecret, setAdminSecret] = useState('');
   const [adminPhonetic, setAdminPhonetic] = useState('');
   const [adminSounds, setAdminSounds] = useState(''); // e.g., "f-i-sh"
@@ -577,8 +578,7 @@ function App() {
     }
   };
 
-  const handlePatternSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePatternSubmit = async (e: React.FormEvent) => {    e.preventDefault();
     setAdminError('');
     setAdminSuccess('');
 
@@ -627,12 +627,35 @@ function App() {
     }
   };
 
+  const fetchSchedule = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/words/schedule/`, { credentials: 'include' });
+      if (res.ok) setScheduleWords(await res.json());
+    } catch (err) {
+      console.error('Error fetching schedule:', err);
+    }
+  };
+
+  const handleReschedule = async (wordId: number, newDate: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/words/${wordId}/reschedule/`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: newDate }),
+      });
+      if (res.ok) fetchSchedule();
+    } catch (err) {
+      console.error('Error rescheduling word:', err);
+    }
+  };
+
   return (
     <div className="App">
       <MenuBar
         user={user}
         onShowInfo={() => setShowInfo(true)}
-        onShowAdmin={() => setShowAdmin(true)}
+        onShowAdmin={() => { setShowAdmin(true); fetchSchedule(); }}
         onShowAuth={() => setShowAuth(true)}
         onShowLeaderboard={() => setShowLeaderboard(true)}
         onShowUserProfile={() => setShowUserProfile(true)}
@@ -724,6 +747,8 @@ function App() {
         onPatternSoundChange={(value) => setPatternSound(value)}
         onPatternReferenceChange={(value) => setPatternReference(value)}
         onPatternSubmit={handlePatternSubmit}
+        scheduleWords={scheduleWords}
+        onReschedule={handleReschedule}
       />
 
       <PasswordResetModal

@@ -17,4 +17,6 @@ urlpatterns = [
     path('phonetic-patterns/', views.create_phonetic_pattern, name='create_pattern'),
     path('phonetic-patterns/suggest/', views.suggest_phonetic_patterns, name='suggest_patterns'),
     path('leaderboard/', views.get_leaderboard, name='leaderboard'),
+    path('words/schedule/', views.get_schedule, name='schedule'),
+    path('words/<int:word_id>/reschedule/', views.reschedule_word, name='reschedule_word'),
 ]

@@ -561,3 +561,52 @@ def get_leaderboard(request):
         'top_5': top_5,
         'current_user': current_user_data
     })
+
+
+@api_view(['GET'])
+def get_schedule(request):
+    """Return all words with their assigned dates - admin only"""
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return Response({'error': 'Permission denied. Admin access required.'}, status=403)
+
+    words = Word.objects.order_by('date').values('id', 'secret', 'phonetic', 'date')
+    return Response(list(words))
+
+
+@api_view(['PATCH'])
+def reschedule_word(request, word_id):
+    """Reassign a word to a different date - admin only"""
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return Response({'error': 'Permission denied. Admin access required.'}, status=403)
+
+    from datetime import date as date_type
+    new_date_str = request.data.get('date')
+    if not new_date_str:
+        return Response({'error': 'date is required'}, status=400)
+
+    try:
+        new_date = date_type.fromisoformat(new_date_str)
+    except ValueError:
+        return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
+
+    try:
+        word = Word.objects.get(id=word_id)
+    except Word.DoesNotExist:
+        return Response({'error': 'Word not found'}, status=404)
+
+    # If another word is already on this date, swap their dates
+    existing = Word.objects.filter(date=new_date).exclude(id=word_id).first()
+    if existing:
+        existing.date = word.date
+        existing.save()
+
+    word.date = new_date
+    word.save()
+
+    return Response({
+        'id': word.id,
+        'secret': word.secret,
+        'phonetic': word.phonetic,
+        'date': word.date,
+        'swapped_with': existing.secret if existing else None,
+    })

@@ -9,6 +9,7 @@ import UserModal from './components/UserModal';
 import MenuBar from './components/MenuBar';
 import PasswordResetModal from './components/PasswordResetModal';
 import Keyboard from './components/Keyboard';
+import API_BASE_URL from './api';
 
 interface LetterFeedback {
   letter: string;
@@ -70,7 +71,6 @@ function App() {
   const [patternSound, setPatternSound] = useState('');
   const [patternReference, setPatternReference] = useState('');
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
   const MAX_WORD_LENGTH = 7;
   const MAX_ATTEMPTS = 5;
 

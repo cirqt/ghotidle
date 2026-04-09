@@ -798,20 +798,24 @@ function App() {
           {Array.from({ length: MAX_ATTEMPTS }).map((_, index) => {
             const result = guesses[index];
             if (result) {
-              // Show actual guess
+              // Show actual guess — always render MAX_WORD_LENGTH boxes
               return (
                 <div key={index} className={`guess-row ${result.length_match ? 'length-correct' : 'length-wrong'}`}>
                   <div className="guess-letters">
-                    {result.guess.split('').map((letter, letterIndex) => {
-                      const feedback = result.feedback[letterIndex];
-                      return (
-                        <div
-                          key={letterIndex}
-                          className={`guess-letter ${feedback.status}`}
-                        >
-                          {letter.toUpperCase()}
-                        </div>
-                      );
+                    {Array.from({ length: MAX_WORD_LENGTH }).map((_, i) => {
+                      const letter = result.guess[i];
+                      const feedback = result.feedback[i];
+                      if (letter && feedback) {
+                        return (
+                          <div
+                            key={i}
+                            className={`guess-letter ${feedback.status}`}
+                          >
+                            {letter.toUpperCase()}
+                          </div>
+                        );
+                      }
+                      return <div key={i} className="guess-letter empty"></div>;
                     })}
                   </div>
                   <div className="length-indicator" title={result.length_match ? 'Correct length' : 'Wrong length'}>

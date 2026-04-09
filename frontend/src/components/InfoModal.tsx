@@ -66,6 +66,17 @@ function InfoModal({ isOpen, onClose }: InfoModalProps) {
           </ul>
 
           <p>
+            <strong>Length hint:</strong>
+          </p>
+          <p style={{ fontSize: '0.9rem', color: '#b0b0b0' }}>
+            A small bar appears to the right of each guess.
+            If it glows <span style={{ color: '#538d4e', fontWeight: 'bold' }}>green</span>, your
+            guess has the correct number of letters.
+            If it glows <span style={{ color: '#f87171', fontWeight: 'bold' }}>red</span>, try a
+            different length.
+          </p>
+
+          <p>
             You have <strong>5 attempts</strong> to guess the word. Good luck!
           </p>
         </div>

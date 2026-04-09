@@ -800,7 +800,7 @@ function App() {
             if (result) {
               // Show actual guess
               return (
-                <div key={index} className="guess-row">
+                <div key={index} className={`guess-row ${result.length_match ? 'length-correct' : 'length-wrong'}`}>
                   <div className="guess-letters">
                     {result.guess.split('').map((letter, letterIndex) => {
                       const feedback = result.feedback[letterIndex];
@@ -814,12 +814,8 @@ function App() {
                       );
                     })}
                   </div>
-                  <div className="guess-info">
-                    {result.length_match ? (
-                      <span className="length-match">✓ Correct length</span>
-                    ) : (
-                      <span className="length-mismatch">✗ Wrong length</span>
-                    )}
+                  <div className="length-indicator" title={result.length_match ? 'Correct length' : 'Wrong length'}>
+                    <div className="length-bar"></div>
                   </div>
                 </div>
               );
@@ -837,7 +833,9 @@ function App() {
                       </div>
                     ))}
                   </div>
-                  <div className="guess-info"></div>
+                  <div className="length-indicator placeholder">
+                    <div className="length-bar"></div>
+                  </div>
                 </div>
               );
             } else {
@@ -849,7 +847,9 @@ function App() {
                       <div key={i} className="guess-letter empty"></div>
                     ))}
                   </div>
-                  <div className="guess-info"></div>
+                  <div className="length-indicator placeholder">
+                    <div className="length-bar"></div>
+                  </div>
                 </div>
               );
             }

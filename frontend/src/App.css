@@ -198,19 +198,54 @@
 
 .guess-row {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
   width: 100%;
 }
 
 .guess-letters {
   display: flex;
   gap: 4px;
-  width: 100%;
+  flex: 1;
 }
 
 .guess-info {
   display: none;
+}
+
+/* Length indicator bar */
+.length-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  flex-shrink: 0;
+  margin-left: 8px;
+  align-self: stretch;
+}
+
+.length-indicator .length-bar {
+  width: 4px;
+  height: 100%;
+  border-radius: 2px;
+  background-color: rgba(58, 58, 60, 0.3);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Correct length — green glow */
+.guess-row.length-correct .length-indicator .length-bar {
+  background-color: #538d4e;
+  box-shadow: 0 0 6px rgba(83, 141, 78, 0.6);
+}
+
+/* Wrong length — red glow */
+.guess-row.length-wrong .length-indicator .length-bar {
+  background-color: #b53b3b;
+  box-shadow: 0 0 6px rgba(181, 59, 59, 0.5);
+}
+
+/* Placeholder bar for unsubmitted rows — dim */
+.length-indicator.placeholder .length-bar {
+  background-color: rgba(58, 58, 60, 0.15);
 }
 
 .guess-letter {
@@ -265,20 +300,6 @@
   0%   { transform: scale(1); }
   50%  { transform: scale(1.12); }
   100% { transform: scale(1); }
-}
-
-.length-mismatch {
-  margin: 0;
-  color: #f44336;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.length-match {
-  margin: 0;
-  color: #6aaa64;
-  font-size: 12px;
-  font-weight: 500;
 }
 
 .error-message {

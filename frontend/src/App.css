@@ -199,21 +199,22 @@
 .guess-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .guess-letters {
   display: flex;
   gap: 4px;
-  min-width: 280px;
   justify-content: flex-start;
 }
 
 .guess-info {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  width: 110px;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 
 .guess-letter {

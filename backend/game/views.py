@@ -23,7 +23,7 @@ def get_word(request):
     )
 
     if word_obj:
-        components = word_obj.phoneticcomponent_set.select_related('pattern').order_by('id')
+        components = word_obj.phoneticcomponent_set.select_related('pattern').order_by('position')
         phonetic_patterns = [
             {
                 'letters': c.pattern.letters,

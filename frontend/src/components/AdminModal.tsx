@@ -72,13 +72,13 @@ function AdminModal({
   scheduleWords,
   onReschedule,
 }: AdminModalProps) {
-  if (!isOpen) return null;
-
-  // Calendar state
+  // Calendar state — must be before any early returns (Rules of Hooks)
   const today = new Date();
   const [calendarDate, setCalendarDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [reassignWordId, setReassignWordId] = useState<string>('');
+
+  if (!isOpen) return null;
 
   const year = calendarDate.getFullYear();
   const month = calendarDate.getMonth();

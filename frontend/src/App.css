@@ -254,6 +254,24 @@
   color: #ffffff;
 }
 
+/* Active typing row */
+.guess-row.active .guess-letter.typing {
+  background-color: transparent;
+  border-color: #565758;
+  color: #ffffff;
+}
+
+.guess-row.active .guess-letter.typing.filled {
+  border-color: #999a9b;
+  animation: pop 0.1s ease-in-out;
+}
+
+@keyframes pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
 .length-mismatch {
   margin: 0;
   color: #f44336;

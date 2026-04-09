@@ -230,6 +230,25 @@ function App() {
     }
   };
 
+  // Global keyboard listener — captures physical key presses since there's no text input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === 'Enter') {
+        handleKeyPress('Enter');
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleKeyPress('Backspace');
+      } else if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
+        handleKeyPress(e.key.toLowerCase());
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentGuess, gameWon, gameLost, isLoading]);
+
   const submitGuess = async () => {
     setIsLoading(true);
     setError('');
@@ -804,12 +823,31 @@ function App() {
                   </div>
                 </div>
               );
+            } else if (index === guesses.length && !gameWon && !gameLost) {
+              // Active input row — show currentGuess letters in boxes
+              return (
+                <div key={index} className="guess-row active">
+                  <div className="guess-letters">
+                    {Array.from({ length: MAX_WORD_LENGTH }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`guess-letter typing ${i < currentGuess.length ? 'filled' : ''}`}
+                      >
+                        {currentGuess[i]?.toUpperCase() || ''}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="guess-info"></div>
+                </div>
+              );
             } else {
               // Show empty slot
               return (
                 <div key={index} className="guess-row empty">
                   <div className="guess-letters">
-                    <div className="guess-letter empty"></div>
+                    {Array.from({ length: MAX_WORD_LENGTH }).map((_, i) => (
+                      <div key={i} className="guess-letter empty"></div>
+                    ))}
                   </div>
                   <div className="guess-info"></div>
                 </div>
@@ -818,23 +856,6 @@ function App() {
           })}
         </div>
       
-        <div className="search-container">
-          <input
-            type="text"
-            className="search-input"
-            value={currentGuess}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleKeyPress('Enter');
-              }
-            }}
-            placeholder={gameWon ? "You won!" : gameLost ? "Game over!" : "enter your guess"}
-            autoFocus
-            disabled={isLoading || gameWon || gameLost}
-          />
-        </div>
-
         <Keyboard 
           onKeyPress={handleKeyPress} 
           letterStatuses={getKeyboardLetterStatus()} 

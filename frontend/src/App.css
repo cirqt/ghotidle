@@ -199,27 +199,23 @@
 .guess-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
 }
 
 .guess-letters {
   display: flex;
   gap: 4px;
-  justify-content: flex-start;
+  width: 100%;
 }
 
 .guess-info {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-shrink: 0;
-  margin-left: 8px;
+  display: none;
 }
 
 .guess-letter {
-  width: 42px;
-  height: 42px;
+  flex: 1;
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -233,8 +229,6 @@
 .guess-letter.empty {
   background-color: transparent;
   border-color: rgba(58, 58, 60, 0.3);
-  width: 42px;
-  min-width: 42px;
 }
 
 .guess-letter.correct {

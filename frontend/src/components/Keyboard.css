@@ -12,7 +12,8 @@
 }
 
 .keyboard-key {
-  min-width: 36px;
+  flex: 1;
+  max-width: 48px;
   height: 48px;
   border: none;
   border-radius: 4px;
@@ -21,7 +22,7 @@
   font-size: 12px;
   font-weight: 1000;
   cursor: pointer;
-  padding: 0 8px;
+  padding: 0;
   text-transform: uppercase;
   transition: background-color 0.1s;
 }
@@ -31,7 +32,8 @@
 }
 
 .keyboard-key.special {
-  min-width: 55px;
+  flex: 1.5;
+  max-width: 72px;
   font-size: 11px;
 }
 

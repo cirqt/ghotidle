@@ -17,7 +17,6 @@ SAMPLE_WORDS = [
         'secret': 'potato',
         'phonetic': 'photeighteau',
         'patterns': [
-            {'letters': 'ph', 'sound': 'p', 'reference': 'phone'},
             {'letters': 'o', 'sound': 'oh', 'reference': 'go'},
             {'letters': 'te', 'sound': 't', 'reference': 'ballet'},
             {'letters': 'eigh', 'sound': 'ay', 'reference': 'eight'},
@@ -30,7 +29,6 @@ SAMPLE_WORDS = [
         'phonetic': 'ynough',
         'patterns': [
             {'letters': 'y', 'sound': 'i', 'reference': 'gym'},
-            {'letters': 'n', 'sound': 'n', 'reference': 'no'},
             {'letters': 'ough', 'sound': 'uff', 'reference': 'rough'},
         ],
     },

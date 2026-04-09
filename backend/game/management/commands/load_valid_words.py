@@ -14,12 +14,12 @@ class Command(BaseCommand):
 
         words_file = os.path.join(
             os.path.dirname(__file__),  # commands/
-            '..', '..', '..', '..', 'data', 'words_filtered.txt'
+            '..', '..', '..', 'data', 'words_filtered.txt'
         )
         words_file = os.path.abspath(words_file)
 
         if not os.path.exists(words_file):
-            self.stdout.write(self.style.ERROR(f'Words file not found: {words_file}'))
+            self.stdout.write(self.style.ERROR(f'Words file not found at: {words_file}'))
             return
 
         self.stdout.write(f'Loading words from {words_file}...')

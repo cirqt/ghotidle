@@ -31,7 +31,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'fallback-key-for-local-dev-onl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+_allowed = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = ['*'] if _allowed == '*' else [h.strip() for h in _allowed.split(',')]
 
 
 # Application definition
@@ -148,11 +149,13 @@ CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(',')]
 CORS_ALLOW_CREDENTIALS = True  # Allow session cookies
 
 # Session cookie settings for cross-origin requests
-SESSION_COOKIE_SAMESITE = 'Lax'
+# SameSite=None required for cross-origin credentialed requests (frontend on different domain)
+SESSION_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = not DEBUG  # True in production (HTTPS)
-CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = True  # Required when SameSite=None
+CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_HTTPONLY = False  # Must be False for JavaScript access
+CSRF_COOKIE_SECURE = True     # Required when SameSite=None
 _csrf_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000')
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _csrf_origins.split(',')]
 

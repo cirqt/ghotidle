@@ -827,8 +827,12 @@ function App() {
                   setEasyMode(false);
                 } else {
                   // Turning on — check if user wants to skip the warning
-                  const skipWarning = localStorage.getItem('easyModeSkipWarning') === 'true';
-                  if (skipWarning) {
+                  // Check if we should skip the warning:
+                  // 1. "Don't show again" was checked (permanent, localStorage)
+                  // 2. Already confirmed once this session (12-hour cookie)
+                  const skipPermanent = localStorage.getItem('easyModeSkipWarning') === 'true';
+                  const skipSession = document.cookie.match(/(?:^|;\s*)easyModeConfirmed=([^;]*)/) !== null;
+                  if (skipPermanent || skipSession) {
                     // Enable immediately
                     setEasyMode(true);
                     setEasyModeUsed(true);
@@ -865,6 +869,8 @@ function App() {
                       setEasyModeUsed(true);
                       const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
                       document.cookie = `easyMode=true; expires=${expires}; path=/; SameSite=Lax`;
+                      // Remember that user already confirmed — don't ask again for 12 hours
+                      document.cookie = `easyModeConfirmed=true; expires=${expires}; path=/; SameSite=Lax`;
                       setShowEasyModeConfirm(false);
                     }}
                   >

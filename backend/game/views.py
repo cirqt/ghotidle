@@ -24,15 +24,35 @@ def get_word(request):
 
     if word_obj:
         components = word_obj.phoneticcomponent_set.select_related('pattern').order_by('position')
-        phonetic_patterns = [
-            {
-                'letters': c.pattern.letters,
-                'sound': c.pattern.sound,
-                'reference': c.pattern.reference,
-            }
-            for c in components
-        ]
-        phonetic_spelling = ','.join(c.pattern.letters for c in components)
+
+        # Build phonetic breakdown from components.
+        # For no_change components (sound keeps original spelling), the pattern
+        # points to a generic placeholder ("*") — derive the actual letters from
+        # the stored phonetic string instead.
+        phonetic_parts = list(word_obj.phonetic.split(',')) if ',' in word_obj.phonetic else []
+        phonetic_patterns = []
+        phonetic_letters = []
+
+        for i, c in enumerate(components):
+            if c.no_change and i < len(phonetic_parts):
+                # Use letters from the pre-stored phonetic field
+                letters = phonetic_parts[i]
+                sound = letters  # same sound — that's what no_change means
+                reference = ''   # self-referential, no example needed
+            else:
+                letters = c.pattern.letters
+                sound = c.pattern.sound
+                reference = c.pattern.reference
+
+            phonetic_letters.append(letters)
+            phonetic_patterns.append({
+                'letters': letters,
+                'sound': sound,
+                'reference': reference,
+                'no_change': c.no_change,
+            })
+
+        phonetic_spelling = ','.join(phonetic_letters)
 
         return Response({
             'word': word_obj.secret,

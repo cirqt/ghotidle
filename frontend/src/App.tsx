@@ -53,6 +53,7 @@ function App() {
     const match = document.cookie.match(/(?:^|;\s*)easyMode=([^;]*)/);
     return match ? match[1] === 'true' : false;
   });
+  const [showEasyModeConfirm, setShowEasyModeConfirm] = useState(false);
   
   // Password reset state
   const [showPasswordReset, setShowPasswordReset] = useState(false);
@@ -230,13 +231,21 @@ function App() {
   };
 
   const handleKeyPress = async (key: string) => {
+    const maxLen = easyMode && targetWord.length > 0 ? targetWord.length : MAX_WORD_LENGTH;
     if (key === 'Enter') {
       if (currentGuess.length > 0 && !isLoading && !gameWon && !gameLost) {
+        // In easy mode, enforce exact length match before submitting
+        if (easyMode && targetWord.length > 0 && currentGuess.length !== targetWord.length) {
+          setError(`Guess must be ${targetWord.length} letters in easy mode`);
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 2000);
+          return;
+        }
         await submitGuess();
       }
     } else if (key === 'Backspace') {
       setCurrentGuess(currentGuess.slice(0, -1));
-    } else if (key.length === 1 && !gameWon && !gameLost && currentGuess.length < MAX_WORD_LENGTH) {
+    } else if (key.length === 1 && !gameWon && !gameLost && currentGuess.length < maxLen) {
       setCurrentGuess(currentGuess + key);
     }
   };
@@ -805,27 +814,86 @@ function App() {
         <div className="phonetic-word">
           <p>today's phonetic spelling:</p>
           <h2>{phoneticWord || 'Loading...'}</h2>
-          <button
-            className={`easy-mode-toggle ${easyMode ? 'active' : ''}`}
-            onClick={() => {
-              const next = !easyMode;
-              setEasyMode(next);
-              if (next) {
-                // Set sticky flag — once used, it taints the whole session
-                setEasyModeUsed(true);
-                // Set cookie that expires in 12 hours
-                const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
-                document.cookie = `easyMode=true; expires=${expires}; path=/; SameSite=Lax`;
-              } else {
-                // Keep the cookie (player already used easy mode today)
-                // easyModeUsed stays true — you can't un-taint the record
-              }
-            }}
-            title={easyMode ? 'Easy mode: word length revealed (record won\'t count)' : 'Enable easy mode for a length hint (record won\'t count)'}
-          >
-            {easyMode ? '🟢 Easy' : '💡 Easy'}
-          </button>
+          <div className="easy-mode-row">
+            <span className="easy-mode-label">Easy</span>
+            <div
+              className={`toggle-switch ${easyMode ? 'on' : ''}`}
+              role="switch"
+              aria-checked={easyMode}
+              tabIndex={0}
+              onClick={() => {
+                if (easyMode) {
+                  // Turning off — always allowed, no confirmation needed
+                  setEasyMode(false);
+                } else {
+                  // Turning on — check if user wants to skip the warning
+                  const skipWarning = localStorage.getItem('easyModeSkipWarning') === 'true';
+                  if (skipWarning) {
+                    // Enable immediately
+                    setEasyMode(true);
+                    setEasyModeUsed(true);
+                    const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+                    document.cookie = `easyMode=true; expires=${expires}; path=/; SameSite=Lax`;
+                  } else {
+                    setShowEasyModeConfirm(true);
+                  }
+                }
+              }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
+            >
+              <div className="toggle-knob" />
+            </div>
+          </div>
         </div>
+
+        {/* Easy mode confirmation modal */}
+        {showEasyModeConfirm && (
+          <div className="modal-overlay" onClick={() => setShowEasyModeConfirm(false)}>
+            <div className="modal-content easy-confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Enable Easy Mode?</h2>
+                <button className="modal-close" onClick={() => setShowEasyModeConfirm(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <p>Easy mode reveals the <strong>word length</strong> by showing exactly that many boxes.</p>
+                <p className="easy-confirm-warning">⚠️ Your record <strong>won't count</strong> for today's puzzle. This resets tomorrow — there's no going back.</p>
+                <div className="easy-confirm-actions">
+                  <button
+                    className="easy-confirm-btn confirm"
+                    onClick={() => {
+                      setEasyMode(true);
+                      setEasyModeUsed(true);
+                      const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+                      document.cookie = `easyMode=true; expires=${expires}; path=/; SameSite=Lax`;
+                      setShowEasyModeConfirm(false);
+                    }}
+                  >
+                    Enable Easy Mode
+                  </button>
+                  <button
+                    className="easy-confirm-btn cancel"
+                    onClick={() => setShowEasyModeConfirm(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <label className="easy-confirm-remember">
+                  <input
+                    type="checkbox"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        localStorage.setItem('easyModeSkipWarning', 'true');
+                      } else {
+                        localStorage.removeItem('easyModeSkipWarning');
+                      }
+                    }}
+                  />
+                  Don't show this again
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="guesses-container">
           {Array.from({ length: MAX_ATTEMPTS }).map((_, index) => {

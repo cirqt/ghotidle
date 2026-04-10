@@ -186,28 +186,112 @@
   font-weight: bold;
 }
 
-/* Easy mode toggle */
-.easy-mode-toggle {
-  background: none;
-  border: 1px solid #3a3a3c;
-  color: #818384;
-  font-size: 0.75rem;
-  padding: 4px 12px;
-  border-radius: 12px;
-  cursor: pointer;
+/* Easy mode — iOS-style toggle switch */
+.easy-mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin-top: 6px;
-  transition: all 0.2s ease;
 }
 
-.easy-mode-toggle:hover {
-  border-color: #565758;
+.easy-mode-label {
+  font-size: 0.8rem;
+  color: #818384;
+  user-select: none;
+}
+
+.toggle-switch {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: #3a3a3c;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+  outline: none;
+}
+
+.toggle-switch:focus-visible {
+  box-shadow: 0 0 0 2px #538d4e;
+}
+
+.toggle-switch.on {
+  background-color: #34c759;
+}
+
+.toggle-knob {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-switch.on .toggle-knob {
+  transform: translateX(20px);
+}
+
+/* Easy mode confirmation modal */
+.easy-confirm-modal {
+  max-width: 360px;
+}
+
+.easy-confirm-warning {
+  color: #b59f3b;
+  font-size: 0.9rem;
+  margin: 12px 0;
+  line-height: 1.5;
+}
+
+.easy-confirm-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.easy-confirm-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.easy-confirm-btn:hover {
+  opacity: 0.85;
+}
+
+.easy-confirm-btn.confirm {
+  background-color: #34c759;
+  color: #fff;
+}
+
+.easy-confirm-btn.cancel {
+  background-color: #3a3a3c;
   color: #d7dadc;
 }
 
-.easy-mode-toggle.active {
-  border-color: #538d4e;
-  color: #6aaa64;
-  background-color: rgba(83, 141, 78, 0.15);
+.easy-confirm-remember {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 0.8rem;
+  color: #818384;
+  cursor: pointer;
+  user-select: none;
+}
+
+.easy-confirm-remember input[type="checkbox"] {
+  accent-color: #34c759;
 }
 
 /* Easy mode disclaimer in game-over modal */

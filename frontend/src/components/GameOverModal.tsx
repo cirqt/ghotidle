@@ -10,6 +10,7 @@ interface GameOverModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  subtitle?: string;
   breakdownTitle: string;
   resultClass: 'won' | 'lost';
   targetWord: string;
@@ -22,6 +23,7 @@ function GameOverModal({
   isOpen,
   onClose,
   title,
+  subtitle,
   breakdownTitle,
   resultClass,
   targetWord,
@@ -36,6 +38,7 @@ function GameOverModal({
       <div className="modal-content game-over-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{title}</h2>
+          {subtitle && <p className="easy-mode-disclaimer">{subtitle}</p>}
           <button className="modal-close" onClick={onClose}>
             ×
           </button>

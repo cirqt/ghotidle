@@ -43,6 +43,16 @@ function App() {
   const [phoneticWord, setPhoneticWord] = useState(''); // e.g., "GHOTI"
   const [targetWord, setTargetWord] = useState(''); // The actual answer
   const [phoneticPatterns, setPhoneticPatterns] = useState<Array<{letters: string, sound: string, reference: string}>>([]);
+  const [easyMode, setEasyMode] = useState(() => {
+    // Check cookie on load — if easy mode was enabled in the last 12 hours, restore it
+    const match = document.cookie.match(/(?:^|;\s*)easyMode=([^;]*)/);
+    return match ? match[1] === 'true' : false;
+  });
+  const [easyModeUsed, setEasyModeUsed] = useState(() => {
+    // If easy mode cookie exists, the player already used it this session
+    const match = document.cookie.match(/(?:^|;\s*)easyMode=([^;]*)/);
+    return match ? match[1] === 'true' : false;
+  });
   
   // Password reset state
   const [showPasswordReset, setShowPasswordReset] = useState(false);
@@ -90,7 +100,8 @@ function App() {
       )
       .join('\n');
 
-    return `Ghotidle ${attemptNumber}/${MAX_ATTEMPTS}\n\n${emojiGrid}`;
+    const easyTag = easyModeUsed ? ' (Easy Mode 💡)' : '';
+    return `Ghotidle ${attemptNumber}/${MAX_ATTEMPTS}${easyTag}\n\n${emojiGrid}`;
   };
 
   // Handle share button click
@@ -699,6 +710,7 @@ function App() {
         isOpen={gameLost}
         onClose={() => setGameLost(false)}
         title="Better luck next time!"
+        subtitle={easyModeUsed ? "💡 Easy mode was used — this doesn't count toward your record." : undefined}
         breakdownTitle="How it's spelled:"
         resultClass="lost"
         targetWord={targetWord}
@@ -711,6 +723,7 @@ function App() {
         isOpen={gameWon}
         onClose={() => setGameWon(false)}
         title="🎉 You won!"
+        subtitle={easyModeUsed ? "💡 Easy mode was used — this doesn't count toward your record." : undefined}
         breakdownTitle="Here's how it's spelled:"
         resultClass="won"
         targetWord={targetWord}
@@ -790,19 +803,40 @@ function App() {
 
       <div className="game-content">
         <div className="phonetic-word">
-          <p>todays phonetic speeling:</p>
+          <p>today's phonetic spelling:</p>
           <h2>{phoneticWord || 'Loading...'}</h2>
+          <button
+            className={`easy-mode-toggle ${easyMode ? 'active' : ''}`}
+            onClick={() => {
+              const next = !easyMode;
+              setEasyMode(next);
+              if (next) {
+                // Set sticky flag — once used, it taints the whole session
+                setEasyModeUsed(true);
+                // Set cookie that expires in 12 hours
+                const expires = new Date(Date.now() + 12 * 60 * 60 * 1000).toUTCString();
+                document.cookie = `easyMode=true; expires=${expires}; path=/; SameSite=Lax`;
+              } else {
+                // Keep the cookie (player already used easy mode today)
+                // easyModeUsed stays true — you can't un-taint the record
+              }
+            }}
+            title={easyMode ? 'Easy mode: word length revealed (record won\'t count)' : 'Enable easy mode for a length hint (record won\'t count)'}
+          >
+            {easyMode ? '🟢 Easy' : '💡 Easy'}
+          </button>
         </div>
 
         <div className="guesses-container">
           {Array.from({ length: MAX_ATTEMPTS }).map((_, index) => {
             const result = guesses[index];
+            const boxCount = easyMode ? targetWord.length : MAX_WORD_LENGTH;
             if (result) {
-              // Show actual guess — always render MAX_WORD_LENGTH boxes
+              // Show actual guess — render boxCount boxes
               return (
-                <div key={index} className={`guess-row ${result.length_match ? 'length-correct' : 'length-wrong'}`}>
+                <div key={index} className={`guess-row ${!easyMode ? (result.length_match ? 'length-correct' : 'length-wrong') : ''}`}>
                   <div className="guess-letters">
-                    {Array.from({ length: MAX_WORD_LENGTH }).map((_, i) => {
+                    {Array.from({ length: boxCount }).map((_, i) => {
                       const letter = result.guess[i];
                       const feedback = result.feedback[i];
                       if (letter && feedback) {
@@ -818,9 +852,11 @@ function App() {
                       return <div key={i} className="guess-letter empty"></div>;
                     })}
                   </div>
-                  <div className="length-indicator" title={result.length_match ? 'Correct length' : 'Wrong length'}>
-                    <div className="length-bar"></div>
-                  </div>
+                  {!easyMode && (
+                    <div className="length-indicator" title={result.length_match ? 'Correct length' : 'Wrong length'}>
+                      <div className="length-bar"></div>
+                    </div>
+                  )}
                 </div>
               );
             } else if (index === guesses.length && !gameWon && !gameLost) {
@@ -828,7 +864,7 @@ function App() {
               return (
                 <div key={index} className="guess-row active">
                   <div className="guess-letters">
-                    {Array.from({ length: MAX_WORD_LENGTH }).map((_, i) => (
+                    {Array.from({ length: boxCount }).map((_, i) => (
                       <div
                         key={i}
                         className={`guess-letter typing ${i < currentGuess.length ? 'filled' : ''}`}
@@ -837,9 +873,11 @@ function App() {
                       </div>
                     ))}
                   </div>
-                  <div className="length-indicator placeholder">
-                    <div className="length-bar"></div>
-                  </div>
+                  {!easyMode && (
+                    <div className="length-indicator placeholder">
+                      <div className="length-bar"></div>
+                    </div>
+                  )}
                 </div>
               );
             } else {
@@ -847,13 +885,15 @@ function App() {
               return (
                 <div key={index} className="guess-row empty">
                   <div className="guess-letters">
-                    {Array.from({ length: MAX_WORD_LENGTH }).map((_, i) => (
+                    {Array.from({ length: boxCount }).map((_, i) => (
                       <div key={i} className="guess-letter empty"></div>
                     ))}
                   </div>
-                  <div className="length-indicator placeholder">
-                    <div className="length-bar"></div>
-                  </div>
+                  {!easyMode && (
+                    <div className="length-indicator placeholder">
+                      <div className="length-bar"></div>
+                    </div>
+                  )}
                 </div>
               );
             }

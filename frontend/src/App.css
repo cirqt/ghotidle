@@ -322,6 +322,7 @@
   display: flex;
   gap: 4px;
   flex: 1;
+  justify-content: center;
 }
 
 .guess-info {
@@ -367,6 +368,8 @@
 .guess-letter {
   flex: 1;
   aspect-ratio: 1;
+  max-width: 56px;
+  max-height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;

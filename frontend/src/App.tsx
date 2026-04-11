@@ -566,6 +566,16 @@ function App() {
     }
 
     try {
+      // Build pattern_ids in sound order (not click order)
+      // Walk through suggestedPatterns (which is in sound order) and for each
+      // non-no_change sound, find which of its patterns is in selectedPatterns
+      const orderedPatternIds: (number | null)[] = [];
+      suggestedPatterns.forEach((sound: any, soundIndex: number) => {
+        if (noChangeSoundIndexes.includes(soundIndex)) return; // skip no_change sounds
+        const matchedPattern = sound.patterns.find((p: any) => selectedPatterns.includes(p.id));
+        orderedPatternIds.push(matchedPattern ? matchedPattern.id : null);
+      });
+
       const response = await fetch(`${API_BASE_URL}/words/`, {
         method: 'POST',
         headers: {
@@ -576,7 +586,7 @@ function App() {
           secret: adminSecret.toLowerCase().trim(),
           phonetic: adminPhonetic.toLowerCase().trim(),
           sounds: adminSounds.toLowerCase().trim(),
-          pattern_ids: selectedPatterns,
+          pattern_ids: orderedPatternIds,
           no_change_indexes: noChangeSoundIndexes,
         }),
       });
